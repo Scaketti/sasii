@@ -360,12 +360,13 @@ expct_GNOT_freq <- function(alelic_freq){ # Calculate expected genotypes frquenc
 
     sorted_alelic_freq = sort(names(alelic_freq));
 
+    #print(paste("Expct:", typeof(alelic_freq)));
     a = lapply(sorted_alelic_freq, function(locus){
         exp_gnot_freq = 0;
         generated_genotypes = generate_genotypes(names(alelic_freq[[locus]]));
 
-        EXPCT_GNOT_freq[locus] = list(array(rep(array(), length(generated_genotypes)), c(length(generated_genotypes), 1)));
-        names(EXPCT_GNOT_freq[[locus]]) <- generated_genotypes;
+        EXPCT_GNOT_freq[locus] <<- list(array(rep(array(), length(generated_genotypes)), c(length(generated_genotypes), 1)));
+        names(EXPCT_GNOT_freq[[locus]]) <<- generated_genotypes;
 
         lapply(generated_genotypes, function(genotype){
             
@@ -383,10 +384,10 @@ expct_GNOT_freq <- function(alelic_freq){ # Calculate expected genotypes frquenc
                 }
             }
 
-            EXPCT_GNOT_freq[[locus]][genotype] = exp_gnot_freq;
+            EXPCT_GNOT_freq[[locus]][genotype] <<- exp_gnot_freq;
         });
     });
-
+    #print(EXPCT_GNOT_freq);
     return(EXPCT_GNOT_freq);
 }
 #----------------------------------------
@@ -395,7 +396,7 @@ generate_genotypes <- function(allelic_freq_inlocus) { # Create list of possible
 
     sorted_allelic_freq_inlocus = sort(allelic_freq_inlocus); #VERIFICAR
 
-    lapply(sorted_allelic_freq_inlocus, function(allele1){
+    a = lapply(sorted_allelic_freq_inlocus, function(allele1){
         lapply(sorted_allelic_freq_inlocus, function(allele2) {
             genotype = paste0(allele1, '-', allele2);
 
@@ -533,9 +534,8 @@ mixed_calcs <- function(sample) {
     allele_rich <<- gnot_numbers <<- allele_numbers <<- array(rep(array(), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1)); #cria um array de tamanho loci
     names(allele_rich) <<- names(gnot_numbers) <<- names(allele_numbers) <<- loci_names; #cria o nome da coluna
 
-    make_hash_count(sample);
+    make_hash_count(sample); #
     allele_freq <<- freq_calc(allele_numbers);
-    
     gnot_freq = freq_calc(gnot_numbers);
     EXPCT_GNOT_freq = expct_GNOT_freq(allele_freq);
     he_calc(allele_freq, n_size, '1');
@@ -616,32 +616,32 @@ nei_d <- function(freq2) { #Nei distance (1972)
 
     sorted_freq1 = sort(names(freq1));
 
-    lapply(sorted_freq1, function(locus) {
-        l = l + 1;
+    a = lapply(sorted_freq1, function(locus) {
+        l <<- l + 1;
 
         sorted_locus = sort(names(freq1[[locus]]));
 
         lapply(sorted_locus, function(allele) {
-            jx = freq1[[locus]][allele] ** 2;
-            jx_array <- append(jx_array, jx);
+            jx <<- freq1[[locus]][allele] ** 2;
+            jx_array <<- append(jx_array, jx);
 
             if ( is.na(freq2[[locus]][allele]) ){
-                freq2[[locus]][allele] = 0;
+                freq2[[locus]][allele] <<- 0;
             }
-            jy = freq2[[locus]][allele] ** 2;
-            jy_array <- append(jy_array, jy);
+            jy <<- freq2[[locus]][allele] ** 2;
+            jy_array <<- append(jy_array, jy);
         });
     });
 
-    lapply(sorted_freq1, function(locus) {
+    a = lapply(sorted_freq1, function(locus) {
         sorted_locus = sort(names(freq1[[locus]]));
 
         lapply(sorted_locus, function(allele) {
-            if(is.na(freq2[[locus]][allele])){ jxy = 0;}
+            if(is.na(freq2[[locus]][allele])){ jxy <<- 0;}
             else {
-                jxy = freq1[[locus]][allele] * freq2[[locus]][allele];
+                jxy <<- freq1[[locus]][allele] * freq2[[locus]][allele];
             }
-            jxy_array <- append(jxy_array, jxy);
+            jxy_array <<- append(jxy_array, jxy);
             #print(paste0(freq1[[locus]][allele], " * ",freq2[[locus]][allele], " = ",jxy));
         });
     });
@@ -669,23 +669,23 @@ rogers_d <- function(freq2) { # Calculares modified Rogers distance. Needs HoH o
 
     sorted_freq1 = sort(names(freq1));
 
-    lapply(sorted_freq1, function(locus){
-        l = l + 1;
+    a = lapply(sorted_freq1, function(locus){
+        l <<- l + 1;
         diff_array = vector();
         #print(locus);
         sorted_locus = sort(names(freq1[[locus]]));
 
         lapply(sorted_locus, function(allele) {
-            if(is.na(freq2[[locus]][allele])) freq2[[locus]][allele] = 0; #Treat cases where allele do not exist
+            if(is.na(freq2[[locus]][allele])) freq2[[locus]][allele] <<- 0; #Treat cases where allele do not exist
             
             diff = freq1[[locus]][allele] - freq2[[locus]][allele];
             diff = diff ** 2;
             
-            diff_array <- append(diff_array, diff);
+            diff_array <<- append(diff_array, diff);
         });
 
         diff_sum = sum(diff_array);
-        diff_sum_array <- append(diff_sum_array, diff_sum);
+        diff_sum_array <<- append(diff_sum_array, diff_sum);
     });
     #print(diff_sum_array);
     rogersD = sqrt(sum(diff_sum_array));
@@ -792,11 +792,7 @@ count_freq_5_sample <- function(freq_hash, sample_local) {
     general_local_count = 0;
 
     sorted_freq_hash = sort(names(freq_hash));
-    #print(sample_local);
-    print(freq_hash);
-    print("")
-    print(reference_hash)
-    #quit();
+    
     a = lapply(sorted_freq_hash, function(locus) {
         local_array = as.array(unlist(reference_hash[[locus]]));
         sorted_freq_locus = sort(names(freq_hash[[locus]]));
@@ -812,10 +808,8 @@ count_freq_5_sample <- function(freq_hash, sample_local) {
         local_count = local_count / length(local_array);
         sample_local[[locus]] <<- append(sample_local[[locus]], local_count);
     })
-    
     general_local_count = general_local_count / local_ref_count;
-    print(general_local_count);
-    print(sample_local);
+    
     return (list(general_local_count, sample_local));
 }
 #----------------------------------------
@@ -1142,7 +1136,7 @@ multi_he_orig = local_multi_he;
 # print(paste("Multi_He_ORIGINAL =", multi_he_orig));
 
 a = lapply(loci_names, function(locus){
-    he[[locus]] = 0;
+    he[[locus]] <<- 0;
 });
 
 #-----------DO NOT SPLIT THIS CODE !!!-----------------
@@ -1236,6 +1230,7 @@ while(n_size <= total_individuals) {
     freq_arrays_complete[[as.character(n_size)]] = list();
     start1 = Sys.time();
     while(repeats > 0) { # Do iterations for \$repeats resamples.
+        ini = Sys.time();
         allele_freq = gnot_freq = ht = vector();
         multi_ht = multi_he = multi_ho = nei_fst = weir_theta = 0;
 
@@ -1244,30 +1239,42 @@ while(n_size <= total_individuals) {
         # }
         he_diff <- ho_diff <- array(rep(list(5), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1)); #cria um array de tamanho loci
         names(he_diff) <- names(ho_diff) <- loci_names;
-
+        fim = Sys.time();
+        # print("inicio")
+        # print(fim-ini);
         # Resampling data !!
-        
+        ini = Sys.time();
         sample1 = random_sampling(n_size);
         
         # Calculations for mixed data !!
         #mixed_data = vector(); # Merges original genotype table...
         mixed_data = rbind(sample1, csv_data); #VERIFICAR OS DADOS DISSO
+        fim = Sys.time();
+        # print("ramdom_sampling")
+        # print(fim-ini);
         # if(n_size == 25){
         #     print(sample1);
         #     quit();
         #     print("que caraio");
         # }
-        
+        ini = Sys.time();
         ht = mixed_calcs(mixed_data); # Calculates Ht;
-
+        fim = Sys.time();
+         #print("mixed_calcs")
+         #print(fim-ini);
+        #quit()
         # Calculations for resample !!
+        ini = Sys.time();
         sample_calcs(sample1);
+        
         # if(n_size == 30){
         #     #quit();
         # }
         #    print "\n \$Nei_Fst = $Nei_Fst \n"; # FOR TEST ONLY
         fst_array <- append(fst_array, nei_fst);
-
+        fim = Sys.time();
+        # print("sample_calcs")
+        # print(fim-ini);
         #VERIFICAR ESSAS FUNÇÕES SE PRECISAM MESMO
         #sample1 = sample_for_R(sample1);
         # print(n_minimum);
@@ -1277,19 +1284,21 @@ while(n_size <= total_individuals) {
         # quit();
         
         #r_input_HoH_HoA(allele_freq); #VERIFICAR ESSA FUNÇÃO PARA RETORNO
-
-        samples_five_ref = 0;
         ini = Sys.time();
+        samples_five_ref = 0;
+        
         aux_array = count_freq_5_sample(allele_freq, samples_five_percent);
-        fim = Sys.time();
-        print(fim-ini);
-        quit();
+        
         five_percent_sample_count = aux_array[[1]]; samples_five_ref = aux_array[[2]];
 
         nClass_fiverpercent_count <- append(nClass_fiverpercent_count, five_percent_sample_count);
         samples_five_percent = samples_five_ref;
         
         repeats = repeats - 1;
+        fim = Sys.time();
+        # print("count_freq_5_sample")
+        # print(fim-ini);
+        #quit();
     }
     end1 = Sys.time();
     #print(samples_five_percent);
@@ -1306,8 +1315,8 @@ while(n_size <= total_individuals) {
         nClass_fiverpercent_mean = sprintf("%.5f", mean(samples_five_percent[[locus]]));
         nClass_fiverpercent_sd = sprintf("%.5f", sd(samples_five_percent[[locus]]));
         
-        global_fiverpercent_rate <- append(global_fiverpercent_rate, paste0(n_size, "\t", locus, "\t", nClass_fiverpercent_mean, "\t", nClass_fiverpercent_sd));
-        samples_five_percent[[locus]] = vector(); # Clean \%SAMPLES_five_percent values for use in next N class
+        global_fiverpercent_rate <<- append(global_fiverpercent_rate, paste0(n_size, "\t", locus, "\t", nClass_fiverpercent_mean, "\t", nClass_fiverpercent_sd));
+        samples_five_percent[[locus]] <<- vector(); # Clean \%SAMPLES_five_percent values for use in next N class
     });
 
     local_freq_diffs = freq_diff_calc(mean_allele_freq);
@@ -1325,7 +1334,7 @@ while(n_size <= total_individuals) {
     he_mean = vector();
 
     sorted_he_range = sort(names(he_for_range));
-    lapply(sorted_he_range, function(locus){
+    a = lapply(sorted_he_range, function(locus){
         #he_for_range[[locus]] = he_for_range[[locus]][-1];
         local_array = sort(he_for_range[[locus]][-1]);
         #he_med = mean(he_for_range[[locus]]); he_sd = sd(he_for_range[[locus]]);
@@ -1335,7 +1344,7 @@ while(n_size <= total_individuals) {
         he_min = sprintf("%.5f", local_array[1]);
         he_max = sprintf("%.5f", local_array[length(local_array)]);
 
-        he_data <- append(he_data, paste0(n_size, "\t", locus, "\t", he_med, "\t", he_sd, "\t", he_min, "\t", he_max));
+        he_data <<- append(he_data, paste0(n_size, "\t", locus, "\t", he_med, "\t", he_sd, "\t", he_min, "\t", he_max));
         
         #he_data <- append(he_data, paste(he_min, "\t", he_max, "\n"));
     });
@@ -1349,7 +1358,7 @@ while(n_size <= total_individuals) {
 
 
     sorted_ho_range = sort(names(ho_for_range));
-    lapply(sorted_ho_range, function(locus){
+    a = lapply(sorted_ho_range, function(locus){
         #he_for_range[[locus]] = he_for_range[[locus]][-1];
         local_array = sort(ho_for_range[[locus]][-1]);
         #he_med = mean(he_for_range[[locus]]); he_sd = sd(he_for_range[[locus]]);
@@ -1359,7 +1368,7 @@ while(n_size <= total_individuals) {
         ho_min = sprintf("%.5f", local_array[1]);
         ho_max = sprintf("%.5f", local_array[length(local_array)]);
 
-        ho_data <- append(ho_data, paste0(n_size, "\t", locus, "\t", ho_med, "\t", ho_sd, "\t", ho_min, "\t", ho_max));
+        ho_data <<- append(ho_data, paste0(n_size, "\t", locus, "\t", ho_med, "\t", ho_sd, "\t", ho_min, "\t", ho_max));
         
         #he_data <- append(he_data, paste(he_min, "\t", he_max, "\n"));
     });
@@ -1427,8 +1436,8 @@ while(n_size <= total_individuals) {
     end = Sys.time();
     tempoTotal = end-start;
     tempoInterno = end1-start1;
-    print(paste0("Tempo total: ", tempoTotal));
-    print(paste0("Tempo while interno: ", tempoInterno));
-    print(paste0("Tempo sem while interno: ", tempoTotal-tempoInterno));
-    quit();
+    # print(paste0("Tempo total: ", tempoTotal));
+    # print(paste0("Tempo while interno: ", tempoInterno));
+    # print(paste0("Tempo sem while interno: ", tempoTotal-tempoInterno));
+    # quit();
 }
