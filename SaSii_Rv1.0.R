@@ -449,34 +449,40 @@ random_sampling <- function(n) {
     count = n; 
     total_lines = total_individuals;
     sample = vector();
-    backup_input <- csv_data;
+    #backup_input <- csv_data;
     #teste = 2;
-    while(count > 0) {
-        #print(paste("Tamanho:",nrow(backup_input)));
-        number = as.integer(runif(1, min=1, max=nrow(backup_input)));
-        #print(number);
-        #Creates a matrix with the random individuals selected
-        if(count == n){
-            sample = matrix(data = backup_input[number,], nrow = 1, ncol = 18);
-        }else{
-            #sample = rbind(sample, as.list(backup_input[-2,]));
-            sample = rbind(sample, as.list(backup_input[number,]));
-        }
-        #sample = matrix(data = data[1,], nrow=1, ncol=18)
-        #sample = rbind(sample, as.list(data[4,]))
-        #print(sample);
-        #push(sample, backup_input[number,]); #Extracts randomized line from matrix
-        #length = total_lines - number - 1;
+    sorted_numbers = sample(1:nrow(csv_data), n);
+    #sample = matrix(data = csv_data[sorted_numbers,], nrow = n, ncol = length(csv_data));
+    sample = csv_data[sorted_numbers,];
+    # a = lapply(rev(seq(1, count)), function(count){
+    #     #print(paste("Tamanho:",nrow(backup_input)));
+    #     number = as.integer(runif(1, min=1, max=nrow(backup_input)));
+    #     #print(number);
+    #     #Creates a matrix with the random individuals selected
+    #     if(count == n){
+    #         sample <<- matrix(data = backup_input[number,], nrow = 1, ncol = 18);
+    #     }else{
+    #         #sample = rbind(sample, as.list(backup_input[-2,]));
+    #         sample <<- rbind(sample, as.list(backup_input[number,]));
+    #     }
+    #     #sample = matrix(data = data[1,], nrow=1, ncol=18)
+    #     #sample = rbind(sample, as.list(data[4,]))
+    #     #print(sample);
+    #     #push(sample, backup_input[number,]); #Extracts randomized line from matrix
+    #     #length = total_lines - number - 1;
 
-        backup_input = backup_input[-number,]; #Removes the specific line from matrix
+    #     backup_input <<- backup_input[-number,]; #Removes the specific line from matrix
 
-        #if (length > 0){ backup_input = backup_input[-c(number:number+length),];}
-        #else{ backup_input = backup_input[-1,];}
+    #     #if (length > 0){ backup_input = backup_input[-c(number:number+length),];}
+    #     #else{ backup_input = backup_input[-1,];}
 
-        #total_lines = total_lines - 1;
-        count = count - 1;
-        #teste = teste + 1;
-    }
+    #     #total_lines = total_lines - 1;
+    #     #count = count - 1;
+    #     #teste = teste + 1;
+    # });
+
+    #Time difference of 0.01449418 secs
+
     #print(sample);
     #quit();
     
@@ -786,25 +792,30 @@ count_freq_5_sample <- function(freq_hash, sample_local) {
     general_local_count = 0;
 
     sorted_freq_hash = sort(names(freq_hash));
-    
-    for(locus in sorted_freq_hash) {
+    #print(sample_local);
+    print(freq_hash);
+    print("")
+    print(reference_hash)
+    #quit();
+    a = lapply(sorted_freq_hash, function(locus) {
         local_array = as.array(unlist(reference_hash[[locus]]));
         sorted_freq_locus = sort(names(freq_hash[[locus]]));
         local_count = 0;
 
-        for(key in sorted_freq_locus){
+        lapply(sorted_freq_locus, function(key){
             #print(paste(key, "= ", freq_hash[[locus]][key], key %in% local_array));
             if((freq_hash[[locus]][key] != 0) && (key %in% local_array)) { #verificar se está correto
-                local_count = local_count + 1;
-                general_local_count = general_local_count + 1;
+                local_count <<- local_count + 1;
+                general_local_count <<- general_local_count + 1;
             }
-        }
+        });
         local_count = local_count / length(local_array);
-        sample_local[[locus]] <- append(sample_local[[locus]], local_count);
-    }
-    #print(paste(general_local_count,"/",local_ref_count));
+        sample_local[[locus]] <<- append(sample_local[[locus]], local_count);
+    })
+    
     general_local_count = general_local_count / local_ref_count;
-
+    print(general_local_count);
+    print(sample_local);
     return (list(general_local_count, sample_local));
 }
 #----------------------------------------
@@ -1206,13 +1217,13 @@ while(n_size <= total_individuals) {
     #mean_allele_freq = hash();
     sorted_orig_allele_freq = sort(names(orig_allele_freq));
 
-    for(locus in sorted_orig_allele_freq) {
+    a = lapply(names(sorted_orig_allele_freq), function(locus){
         sorted_locus = sort(names(orig_allele_freq[[locus]]));
 
-        for(allele in sorted_locus) {
-            mean_allele_freq[[locus]][allele] = list(5);
-        }
-    }
+        lapply(sorted_locus, function(allele){
+            mean_allele_freq[[locus]][allele] <<- list(5);
+        });
+    });
 
     # for(locus in loci_names) {
     #     he_for_range[[locus]] = ho_for_range[[locus]] = array(5);
@@ -1235,6 +1246,7 @@ while(n_size <= total_individuals) {
         names(he_diff) <- names(ho_diff) <- loci_names;
 
         # Resampling data !!
+        
         sample1 = random_sampling(n_size);
         
         # Calculations for mixed data !!
@@ -1264,11 +1276,14 @@ while(n_size <= total_individuals) {
         # print(freq_arrays_complete);
         # quit();
         
-        r_input_HoH_HoA(allele_freq); #VERIFICAR ESSA FUNÇÃO PARA RETORNO
+        #r_input_HoH_HoA(allele_freq); #VERIFICAR ESSA FUNÇÃO PARA RETORNO
 
         samples_five_ref = 0;
+        ini = Sys.time();
         aux_array = count_freq_5_sample(allele_freq, samples_five_percent);
-        
+        fim = Sys.time();
+        print(fim-ini);
+        quit();
         five_percent_sample_count = aux_array[[1]]; samples_five_ref = aux_array[[2]];
 
         nClass_fiverpercent_count <- append(nClass_fiverpercent_count, five_percent_sample_count);
@@ -1287,14 +1302,13 @@ while(n_size <= total_individuals) {
     
     
     sorted_samples = sort(names(samples_five_percent));
-    for(locus in sorted_samples) {
-
+    a = lapply(sorted_samples, function(locus){
         nClass_fiverpercent_mean = sprintf("%.5f", mean(samples_five_percent[[locus]]));
         nClass_fiverpercent_sd = sprintf("%.5f", sd(samples_five_percent[[locus]]));
         
         global_fiverpercent_rate <- append(global_fiverpercent_rate, paste0(n_size, "\t", locus, "\t", nClass_fiverpercent_mean, "\t", nClass_fiverpercent_sd));
         samples_five_percent[[locus]] = vector(); # Clean \%SAMPLES_five_percent values for use in next N class
-    }
+    });
 
     local_freq_diffs = freq_diff_calc(mean_allele_freq);
     #print(local_freq_diffs);
@@ -1311,7 +1325,7 @@ while(n_size <= total_individuals) {
     he_mean = vector();
 
     sorted_he_range = sort(names(he_for_range));
-    for(locus in sorted_he_range){
+    lapply(sorted_he_range, function(locus){
         #he_for_range[[locus]] = he_for_range[[locus]][-1];
         local_array = sort(he_for_range[[locus]][-1]);
         #he_med = mean(he_for_range[[locus]]); he_sd = sd(he_for_range[[locus]]);
@@ -1324,7 +1338,7 @@ while(n_size <= total_individuals) {
         he_data <- append(he_data, paste0(n_size, "\t", locus, "\t", he_med, "\t", he_sd, "\t", he_min, "\t", he_max));
         
         #he_data <- append(he_data, paste(he_min, "\t", he_max, "\n"));
-    }
+    });
     
     ho_mean = sort(ho_mean);
     mean_ho = sprintf("%.5f", mean(ho_mean)); sd_ho = sprintf("%.5f", sd(ho_mean));
@@ -1335,7 +1349,7 @@ while(n_size <= total_individuals) {
 
 
     sorted_ho_range = sort(names(ho_for_range));
-    for(locus in sorted_ho_range){
+    lapply(sorted_ho_range, function(locus){
         #he_for_range[[locus]] = he_for_range[[locus]][-1];
         local_array = sort(ho_for_range[[locus]][-1]);
         #he_med = mean(he_for_range[[locus]]); he_sd = sd(he_for_range[[locus]]);
@@ -1348,7 +1362,7 @@ while(n_size <= total_individuals) {
         ho_data <- append(ho_data, paste0(n_size, "\t", locus, "\t", ho_med, "\t", ho_sd, "\t", ho_min, "\t", ho_max));
         
         #he_data <- append(he_data, paste(he_min, "\t", he_max, "\n"));
-    }
+    });
     #print(ho_data);
 
     he_diff_final <- append(he_diff_final, het_diff_push(he_diff));
