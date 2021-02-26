@@ -498,35 +498,44 @@ sample_calcs <- function(sample) {
     allelic_richness(allele_numbers);
     allele_freq <<- freq_calc(allele_numbers);
     gnot_freq = freq_calc(gnot_numbers);
-    EXPCT_GNOT_freq = expct_GNOT_freq(allele_freq);
+    
+    EXPCT_GNOT_freq = expct_GNOT_freq(allele_freq); #0.03 -----------------------------------
+    
     he_calc(allele_freq, n_size, '2');
+    
     multi_he = local_multi_he;
 
     he_mean <<- append(he_mean, as.numeric(multi_he));
     he_diff <<- het_diff_calc(he_orig, he_diff, he);
 
-    mean_freq_prep1(allele_freq);
-
+    mean_freq_prep1(allele_freq); #0.01 ----------------------------------------------------
+    
     sorted_orig_gnot_freq = sort(names(orig_gnot_freq));
 
     #for (locus in sorted_orig_gnot_freq) # Inicialize %Ho with all loci
     #    ho[[locus]] = 0; #VERIFICAR SE ISSO ESTA OK
     #print(paste0("Class: ", n_size, "    Repeat N: ", repeats));
-    ho_calc(gnot_freq);
-    ho_range(ho);
+    
+    ho_calc(gnot_freq); #0.0008
+    
+    ho_range(ho); #0.0004
     
     #print(local_multi_ho);
     
     multi_ho = local_multi_ho;
     ho_mean <<- append(ho_mean, as.numeric(multi_ho));
 
-    ho_diff <<- het_diff_calc(ho_orig, ho_diff, ho);
-    nei_fst <<- calc_nei_fst(multi_ht, multi_he_orig, multi_he, n_size);
-
-    local_nei_d = nei_d(allele_freq);
+    ho_diff <<- het_diff_calc(ho_orig, ho_diff, ho); #0.00008
+    
+    nei_fst <<- calc_nei_fst(multi_ht, multi_he_orig, multi_he, n_size); #0.00002
+    
+    local_nei_d = nei_d(allele_freq); #0.04 -----------------------------------------------------
     neiD_array <<- local_nei_d;
-
-    local_rogers_d = rogers_d(allele_freq);
+    #start = Sys.time();
+    local_rogers_d = rogers_d(allele_freq); #0.02 -----------------------------------------------
+    #end = Sys.time();
+    #print(end-start);
+    #quit();
     rogersD_array <<- local_rogers_d;
 }
 #----------------------------------------
@@ -697,10 +706,10 @@ rogers_d <- function(freq2) { # Calculares modified Rogers distance. Needs HoH o
 mean_freq_prep1 <- function(freqs) {
     sorted_orig_allele_freq = sort(names(orig_allele_freq));
 
-    for(locus in sorted_orig_allele_freq){
+    a = lapply(sorted_orig_allele_freq, function(locus){
         sorted_locus = sort(names(orig_allele_freq[[locus]]));
 
-        for(allele in sorted_locus){
+        lapply(sorted_locus, function(allele){
             #print(paste(locus," - ",allele, "= ", allele_freq[[locus]][allele]));
             if(is.na(allele_freq[[locus]][allele])){
                 allele_freq[[locus]][allele] <<- 0;
@@ -708,10 +717,8 @@ mean_freq_prep1 <- function(freqs) {
                 #print(freqs[[locus]][allele]);
             }
             mean_allele_freq[[locus]][allele] <<- list(append(unlist(mean_allele_freq[[locus]][allele]), allele_freq[[locus]][allele]));
-        }
-    }
-    #print(mean_allele_freq);
-    #quit();
+        });
+    });
 }
 #----------------------------------------
 freq_diff_calc <- function(freqs) {
@@ -1062,10 +1069,10 @@ names(he_for_range) <- names(ho_for_range) <- loci_names;
 #         ho_for_range[[locus]] <- append(ho_for_range[[locus]], 5);
 #         he_for_range[[locus]] <- append(he_for_range[[locus]], 5);
 # }
-start = Sys.time();
+#start = Sys.time();
 make_hash_count(csv_data); 
 alleles_n = allele_count(allele_numbers);
-end = Sys.time();
+#end = Sys.time();
 # print("Make_hash");
 # print(end-start);
 # quit();
@@ -1197,10 +1204,10 @@ rogersD_table = vector();
 he_data = ho_data = vector(); # Mean, sd, min and max He/Ho for each locus in each n class
 he_data <- append(he_data, paste0(total_individuals,"\n",total_loci,"\n",n_minimum));
 ho_data <- append(ho_data, paste0(total_individuals,"\n",total_loci,"\n",n_minimum));
-
+start = Sys.time();
 while(n_size <= total_individuals) {
     print(paste0("Calculating data for ", n_size, " Class."));
-    start = Sys.time();
+    
     he_mean = ho_mean = fst_array = neiD_array = rogersD_array = vector();
     repeats = repeat_N;
     
@@ -1260,8 +1267,8 @@ while(n_size <= total_individuals) {
         ini = Sys.time();
         ht = mixed_calcs(mixed_data); # Calculates Ht;
         fim = Sys.time();
-         #print("mixed_calcs")
-         #print(fim-ini);
+        #  print("mixed_calcs")
+        #  print(fim-ini);
         #quit()
         # Calculations for resample !!
         ini = Sys.time();
@@ -1301,7 +1308,8 @@ while(n_size <= total_individuals) {
         #quit();
     }
     end1 = Sys.time();
-    #print(samples_five_percent);
+    #print(end1-start1);
+    #quit();
     #aux_array = mean_and_sd(nClass_fiverpercent_count); #VERIFICAR ISSO, PROVAVELMETNE NÃO PRECISA DESSA FUNÇÃO
     nClass_fiverpercent_mean = sprintf("%.5f", mean(nClass_fiverpercent_count));
     nClass_fiverpercent_sd = sprintf("%.5f", sd(nClass_fiverpercent_count));
@@ -1425,6 +1433,9 @@ while(n_size <= total_individuals) {
         plot_graphs();
         print("Ploting graphs...");
         print("Finish !");
+        end = Sys.time();
+        tempoTotal = end-start;
+        print(paste0("Tempo total: ", tempoTotal));
         quit();
     }else {
         if (n_size >= total_individuals){
@@ -1433,11 +1444,11 @@ while(n_size <= total_individuals) {
         }
     }
     #----------------------------------------------------------------
-    end = Sys.time();
-    tempoTotal = end-start;
+    
+    
     tempoInterno = end1-start1;
-    # print(paste0("Tempo total: ", tempoTotal));
-    # print(paste0("Tempo while interno: ", tempoInterno));
-    # print(paste0("Tempo sem while interno: ", tempoTotal-tempoInterno));
-    # quit();
+    
+    print(paste0("Tempo while interno: ", tempoInterno));
+    #print(paste0("Tempo sem while interno: ", tempoTotal-tempoInterno));
+    #quit();
 }
