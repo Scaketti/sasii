@@ -1,11 +1,12 @@
 #-------REQUESTS-------------------------
-
+#if (!require(Rcpp)) install.packages('Rcpp')
+#if (!require(microbenchmark)) install.packages('microbenchmark')
 #----------------------------------------
 
 #-------LIBRARIES------------------------
-
+#library(Rcpp)
+#library(microbenchmark)
 #----------------------------------------
-
 # ------SOME GLOBAL VARIABLES------------
 args <- commandArgs(trailingOnly = TRUE);
 
@@ -115,84 +116,6 @@ handleAllele_Gnot <- function(auxAlleles, allele){
 }
 #----------------------------------------
 make_hash_count <- function(data){
-    #0,18 seg
-    # alleles_unsorted = vector(); # Create array to temp storage of unsorted alleles
-    # alleles_sorted = vector();	# Create array to temp storage of sorted alleles
-    # #print("1");
-    # for(indv in 1:nrow(data)){ #For each individual
-    #     for(pos in seq(1, length(data[indv,]), ploid)){ #Select the first position (column) of each locus in data.frame
-    #         auxAlleles = allele_numbers[[loci_names[(pos+1)/ploid]]]; #Get current state of locus
-    #         #print("2");
-    #         #Count alleles in locus for each individual
-    #         for(allele_pos in pos:(pos+ploid-1)){
-    #             index = as.character(data[indv, allele_pos]);
-    #             #print("3");
-    #             if (data[indv, allele_pos] %in% names(auxAlleles)){
-    #                 auxAlleles[index] = as.integer(auxAlleles[index]) + 1;
-    #             }else{
-    #                 if(is.na(auxAlleles[1])){ #Verify if array is empty and inicialize it
-    #                     auxAlleles = array(1); 
-    #                     names(auxAlleles) = index;
-    #                 }
-    #                 else{ #Concatenates a new allele for counting
-    #                     auxAlleles = append(auxAlleles, 1);
-    #                     names(auxAlleles)[length(auxAlleles)] = index;
-    #                 }
-    #             }
-    #         }
-    #         #print("4");
-    #         #print(typeof(auxAlleles));
-    #         allele_numbers[loci_names[(pos+1)/ploid]] <<- list(auxAlleles); #Updates the allele lists
-
-    #         #Generate and count each genotype
-    #         #if(teste) print(sort(unlist(data[indv, pos:(pos+ploid-1)])));
-    #         #if(teste) quit();
-    #         auxGenotypes = gnot_numbers[[loci_names[(pos+1)/ploid]]]; #Get current state of genotypes
-    #         allele_locus = sort(unlist(data[indv, pos:(pos+ploid-1)])); #Get all alleles(sorted) on this locus from this individual
-    #         #print("5");
-    #         #if(teste) quit();
-    #         for(allele1 in allele_locus){
-    #             allele_locus = allele_locus[-1];
-    #             for(allele2 in allele_locus){
-    #                 genotype = paste0(allele1, "-", allele2);
-    #                 #print("6");
-    #                 if (genotype %in% names(auxGenotypes)){
-    #                     auxGenotypes[genotype] = as.integer(auxGenotypes[genotype]) + 1;
-    #                 }else{
-    #                     if(is.na(auxGenotypes[1])){ #Verify if array is empty and inicialize it
-    #                     auxGenotypes = array(1); 
-    #                     names(auxGenotypes) = genotype;
-    #                     }
-    #                     else{ #Concatenates a new allele for counting
-    #                     auxGenotypes = append(auxGenotypes, 1);
-    #                     names(auxGenotypes)[length(auxGenotypes)] = genotype;
-    #                     }
-    #                 }
-    #             }
-    #         }
-    #         gnot_numbers[loci_names[(pos+1)/ploid]] <<- list(auxGenotypes); #Updates the allele lists
-    #     }
-    # }
-    #start = Sys.time();
-    #0.09
-    # a = lapply(1:nrow(data), function(line){
-    #     data_line = data[line,];
-    #     lapply(loci_names, function(locus){
-    #         allele1 = as.character(data_line[1]);
-    #         allele2 = as.character(data_line[2]);
-    #         data_line <<- data_line[-c(1,2)];
-
-    #         auxAlleles = handleAllele_Gnot(allele_numbers[[locus]][[1]], allele1);
-    #         auxAlleles = handleAllele_Gnot(auxAlleles, allele2);
-    #         allele_numbers[[locus]] <<- list(auxAlleles);
-
-    #         sorted_allele = sort(c(allele1, allele2));
-    #         genotype = paste0(sorted_allele[1], "-", sorted_allele[2]);
-    #         auxGnot = handleAllele_Gnot(gnot_numbers[[locus]][[1]], genotype);
-    #         gnot_numbers[[locus]] <<- list(auxGnot);
-    #     });
-    # });
-
     #0.03
     a = lapply(loci_names, function(locus){
         alleles = unlist(subset(data, TRUE, c(locus, paste0(locus,".2"))));
@@ -203,30 +126,6 @@ make_hash_count <- function(data){
         counted_gnot = table(paste0(alleles[seq(1, length(alleles)/2)], "-", alleles[seq(length(alleles)/2 + 1, length(alleles))]))
         gnot_numbers[[locus]] <<- list(counted_gnot);
     });
-    #print(allele_numbers)
-    #0,13 seg
-    # for (line in 1:nrow(data)) {
-    #     data_line = data[line,];
-    #     for(locus in loci_names){
-    #         allele1 = as.character(data_line[1]);
-    #         allele2 = as.character(data_line[2]);
-    #         data_line = data_line[-c(1,2)];
-
-    #         auxAlleles = allele_numbers[[locus]][[1]];
-    #         auxAlleles = handleAllele_Gnot(auxAlleles, allele1);
-    #         auxAlleles = handleAllele_Gnot(auxAlleles, allele2);
-    #         allele_numbers[[locus]] <<- list(auxAlleles);
-
-    #         sorted_allele = sort(c(allele1, allele2));
-    #         genotype = paste0(sorted_allele[1], "-", sorted_allele[2]);
-    #         auxGnot = handleAllele_Gnot(gnot_numbers[[locus]][[1]], genotype);
-    #         gnot_numbers[[locus]] <<- list(auxGnot);
-    #     }
-    # }
-    #end = Sys.time();
-    #print(paste0("Tempo make_hash: ", (end-start)));
-    #quit();
-    #print("");
 }
 #----------------------------------------
 allele_count <- function(allele_hash){
@@ -238,13 +137,9 @@ allele_count <- function(allele_hash){
             }
         })
     });
-    # for(locus in allele_hash){
-    #     for(allele in names(locus[[1]])){
-            
-    #     }
-    # }
     return(count);
 }
+
 #----------------------------------------
 allelic_richness <- function(allele_hash){ #VERIFICAR ESSA FUNÇÃO
     a = lapply(names(allele_hash), function(locus){
@@ -272,6 +167,38 @@ freq_calc <- function(numbers_hash){
     });
     return(freq_hash);
 }
+# cppFunction('
+#     int c_freq_calc(List numbers_hash){
+#         int count = 0;
+#         //List locus_list(numbers_hash);
+#         //CharacterVector locus_name(locus_list.names());
+#         print(numbers_hash[0]);
+
+#         for(auto pLocus : numbers_hash){
+#             print(pLocus);
+#         }
+
+#         /*for(auto pLocus : locus_name){
+#             std::string locus(pLocus);
+
+#             //List a(locus_list[locus]);
+#             //print(a);
+#             List locus(pLocus);
+#             List alleles(locus[0]);
+#             CharacterVector names(alleles.names());
+#             IntegerVector a(alleles);
+
+#             print(alleles);
+#             for(auto pAllele : a){
+#                 if(pAllele != "0"){
+#                     count++;
+#                     //print(pAllele);
+#                 }
+#             }
+#         }*/
+#         return count;
+#     }
+# ')
 #----------------------------------------
 find_less_more <- function(freqs){
     #Extract the position of the less freq allele
@@ -314,33 +241,6 @@ less_more_data <- function(freqs){
     local_SDL = sprintf("%.5f", sd(less_locus_freqs));
     local_SDM = sprintf("%.5f", sd(more_locus_freqs));
 
-    # sorted_freqs = sort(names(freqs));
-
-    # for(locus in sorted_freqs){
-    #     sorted_locus = sort(names(freqs[[locus]]));
-    
-    #     for(allele in sorted_locus){
-    #         arrays_freqs = sort(names(freqs[[locus]][allele]));
-
-    #         #VERIFICAR COMO USAR SHIFT E POP EM R
-    #         if(locus == locus2 && allele == allele2){
-    #             aux_array = mean_and_sd(arrays_freqs);
-    #             local_meanL = aux_array[1]; local_SDL = aux_array[2];
-
-    #             less_min = shift(arrays_freqs);
-    #             less_max = pop(arrays_freqs);
-    #         }
-
-    #         if(locus == locus3 && allele == allele3){
-    #             aux_array = mean_and_sd(arrays_freqs);
-    #             local_meanM = aux_array[1]; local_SDM = aux_array[2];
-
-    #             more_min = shift(arrays_freqs);
-    #             more_max = pop(arrays_freqs);
-    #         }
-    #     }
-    # }
-
     local_data = vector();
 
     less_min = sprintf('%.5f', less_min);
@@ -360,7 +260,6 @@ expct_GNOT_freq <- function(alelic_freq){ # Calculate expected genotypes frquenc
 
     sorted_alelic_freq = sort(names(alelic_freq));
 
-    #print(paste("Expct:", typeof(alelic_freq)));
     a = lapply(sorted_alelic_freq, function(locus){
         exp_gnot_freq = 0;
         generated_genotypes = generate_genotypes(names(alelic_freq[[locus]]));
@@ -450,42 +349,9 @@ random_sampling <- function(n) {
     count = n; 
     total_lines = total_individuals;
     sample = vector();
-    #backup_input <- csv_data;
-    #teste = 2;
+
     sorted_numbers = sample(1:nrow(csv_data), n);
-    #sample = matrix(data = csv_data[sorted_numbers,], nrow = n, ncol = length(csv_data));
     sample = csv_data[sorted_numbers,];
-    # a = lapply(rev(seq(1, count)), function(count){
-    #     #print(paste("Tamanho:",nrow(backup_input)));
-    #     number = as.integer(runif(1, min=1, max=nrow(backup_input)));
-    #     #print(number);
-    #     #Creates a matrix with the random individuals selected
-    #     if(count == n){
-    #         sample <<- matrix(data = backup_input[number,], nrow = 1, ncol = 18);
-    #     }else{
-    #         #sample = rbind(sample, as.list(backup_input[-2,]));
-    #         sample <<- rbind(sample, as.list(backup_input[number,]));
-    #     }
-    #     #sample = matrix(data = data[1,], nrow=1, ncol=18)
-    #     #sample = rbind(sample, as.list(data[4,]))
-    #     #print(sample);
-    #     #push(sample, backup_input[number,]); #Extracts randomized line from matrix
-    #     #length = total_lines - number - 1;
-
-    #     backup_input <<- backup_input[-number,]; #Removes the specific line from matrix
-
-    #     #if (length > 0){ backup_input = backup_input[-c(number:number+length),];}
-    #     #else{ backup_input = backup_input[-1,];}
-
-    #     #total_lines = total_lines - 1;
-    #     #count = count - 1;
-    #     #teste = teste + 1;
-    # });
-
-    #Time difference of 0.01449418 secs
-
-    #print(sample);
-    #quit();
     
     return(sample);
 }
@@ -509,33 +375,18 @@ sample_calcs <- function(sample) {
     he_diff <<- het_diff_calc(he_orig, he_diff, he);
 
     mean_freq_prep1(allele_freq); #0.01 ----------------------------------------------------
-    
     sorted_orig_gnot_freq = sort(names(orig_gnot_freq));
 
-    #for (locus in sorted_orig_gnot_freq) # Inicialize %Ho with all loci
-    #    ho[[locus]] = 0; #VERIFICAR SE ISSO ESTA OK
-    #print(paste0("Class: ", n_size, "    Repeat N: ", repeats));
-    
     ho_calc(gnot_freq); #0.0008
-    
     ho_range(ho); #0.0004
-    
-    #print(local_multi_ho);
-    
     multi_ho = local_multi_ho;
     ho_mean <<- append(ho_mean, as.numeric(multi_ho));
-
     ho_diff <<- het_diff_calc(ho_orig, ho_diff, ho); #0.00008
-    
     nei_fst <<- calc_nei_fst(multi_ht, multi_he_orig, multi_he, n_size); #0.00002
     
     local_nei_d = nei_d(allele_freq); #0.04 -----------------------------------------------------
     neiD_array <<- local_nei_d;
-    #start = Sys.time();
     local_rogers_d = rogers_d(allele_freq); #0.02 -----------------------------------------------
-    #end = Sys.time();
-    #print(end-start);
-    #quit();
     rogersD_array <<- local_rogers_d;
 }
 #----------------------------------------
@@ -550,7 +401,6 @@ mixed_calcs <- function(sample) {
     he_calc(allele_freq, n_size, '1');
 
     mix_he = he;
-    #he = ();
     multi_ht <<- local_multi_he;
     return(mix_he);
 }
@@ -568,11 +418,7 @@ he_calc <- function(local_hash, number_id, type) { #Needs a HoH with allelic fre
         he[[locus]] <<- he_simple * ((2*number_id)/((2*number_id)-1));
     
         if(type == '2') {
-            # print(typeof(he_for_range[[locus]]));
-            # print(he[[locus]]);
-            # print(append(he_for_range[[locus]], he[[locus]]));
             he_for_range[[locus]] <<- append(he_for_range[[locus]], he[[locus]]); 
-            #push(he_for_range[[locus]], he[[locus]]); #VERIFICAR ISSO
         }
     });
     #print(he_for_range);
@@ -740,31 +586,6 @@ freq_diff_calc <- function(freqs) {
             freqs_differences <- append(freqs_differences, paste0(n_size, "\t", paste0(locus, ".", allele), "\t", sprintf('%.5f', diff)));
         }
     }
-
-    #print (freqs_differences[2]);
-    #quit();
-    #PARTE DO CÓDIGO JUNTADO 
-    # sorted_orig_allele_freq = sort(names(orig_allele_freq));
-
-    # for(locus in sorted_orig_allele_freq){
-    #     sorted_locus = sort(orig_allele_freq[[locus]]);
-
-    #     for(allele in sorted_locus){
-    #         print(orig_allele_freq[[locus]][allele]);
-    #         print(mean_freqs[[locus]][allele]);
-    #         quit();
-    #         #diff = orig_allele_freq[[locus]][allele] - mean_freqs[[locus]][allele];
-    #         diff = abs(diff);
-
-    #         if(allele < 100) {allele = paste0('_', allele);}
-
-    #         diff = sprintf('%.5f', diff); #VERIFICAR ISSO
-    #         freqs_differences <- append(freqs_differences, paste(n_size, "\t", paste0(locus, allele), "\t", diff, "\n"));
-    #     }
-    #     print (freqs_differences);
-    #     quit();
-    # }
-    #return ();
     return (freqs_differences);
 }
 #----------------------------------------
@@ -885,22 +706,9 @@ plot_graphs <- function() {
 #----------------------------------------
 het_diff_calc <- function(hash, local_hash, orig_hash) {
     sorted_orig_hash = sort(names(orig_hash));
-    #print("HET DIFF");
-    #print(abs(orig_hash[["MpeB03"]] - hash[["MpeB03"]]));
     for(locus in sorted_orig_hash) {
-        #print(orig_hash[[locus]]);
-        #print(local_hash[[locus]]);
-        #print(paste(orig_hash[[locus]], "-", hash[[locus]], "=", abs(orig_hash[[locus]] - hash[[locus]])));
-        #print(append(local_hash[[locus]], (abs(orig_hash[[locus]] - hash[[locus]]))));
         local_hash[[locus]] <- append(local_hash[[locus]], abs(orig_hash[[locus]] - hash[[locus]]));
-        #print(local_hash[[locus]]);
     }
-    # print(orig_hash[["MpeB03"]]);
-    # print(hash[["MpeB03"]]);
-    # print(abs(orig_hash[["MpeB03"]] - hash[["MpeB03"]]));
-    # print(append(local_hash[["MpeB03"]], (abs(orig_hash[["MpeB03"]] - hash[["MpeB03"]]))));
-    # print("Total");
-    # print(local_hash[["MpeB03"]]);
     return(local_hash);
 }
 #----------------------------------------
@@ -984,13 +792,13 @@ first_line_data = first_line_data - 1;
 csv_data = "";
 csv_data = csv_adjust(read.csv(file = path, sep = ";", skip = first_line_data)); #mudar o nome
 
-cat ("Ploid Number: [default = 2]: ");
-ploid = as.integer(readLines("stdin", n=1));
+#cat ("Ploid Number: [default = 2]: ");
+#ploid = as.integer(readLines("stdin", n=1));
 
-if(is.na(ploid)) {
+#if(is.na(ploid)) {
     ploid = 2;
-    print(paste0("Using ", ploid, "-ploid"));
-}
+    #print(paste0("Using ", ploid, "-ploid"));
+#}
 
 loci_names = names(csv_data);
 loci_names <- sort(loci_names[seq(1,length(loci_names), ploid)]); #Selects just one value for each locus(sorted)
@@ -1069,13 +877,9 @@ names(he_for_range) <- names(ho_for_range) <- loci_names;
 #         ho_for_range[[locus]] <- append(ho_for_range[[locus]], 5);
 #         he_for_range[[locus]] <- append(he_for_range[[locus]], 5);
 # }
-#start = Sys.time();
+
 make_hash_count(csv_data); 
 alleles_n = allele_count(allele_numbers);
-#end = Sys.time();
-# print("Make_hash");
-# print(end-start);
-# quit();
 
 print(paste("Number of alleles:", alleles_n));
 print(paste("N class multiple:", n_minimum));
@@ -1092,6 +896,8 @@ orig_allele_numbers = allele_numbers;
 orig_gnot_numbers = gnot_numbers;
 orig_allele_rich = allele_rich;
 #start = Sys.time();
+#print("freq_calc");
+#orig_allele_freq = c_freq_calc(orig_allele_numbers);
 orig_allele_freq = freq_calc(orig_allele_numbers);
 orig_gnot_freq = freq_calc(orig_gnot_numbers);  #0.02588487 secs
 
@@ -1204,7 +1010,7 @@ rogersD_table = vector();
 he_data = ho_data = vector(); # Mean, sd, min and max He/Ho for each locus in each n class
 he_data <- append(he_data, paste0(total_individuals,"\n",total_loci,"\n",n_minimum));
 ho_data <- append(ho_data, paste0(total_individuals,"\n",total_loci,"\n",n_minimum));
-start = Sys.time();
+#start = Sys.time();
 while(n_size <= total_individuals) {
     print(paste0("Calculating data for ", n_size, " Class."));
     
@@ -1235,9 +1041,9 @@ while(n_size <= total_individuals) {
     #repeats = 2;
     
     freq_arrays_complete[[as.character(n_size)]] = list();
-    start1 = Sys.time();
+    #start1 = Sys.time();
     while(repeats > 0) { # Do iterations for \$repeats resamples.
-        ini = Sys.time();
+        #ini = Sys.time();
         allele_freq = gnot_freq = ht = vector();
         multi_ht = multi_he = multi_ho = nei_fst = weir_theta = 0;
 
@@ -1246,32 +1052,28 @@ while(n_size <= total_individuals) {
         # }
         he_diff <- ho_diff <- array(rep(list(5), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1)); #cria um array de tamanho loci
         names(he_diff) <- names(ho_diff) <- loci_names;
-        fim = Sys.time();
+        #fim = Sys.time();
         # print("inicio")
         # print(fim-ini);
         # Resampling data !!
-        ini = Sys.time();
+        #ini = Sys.time();
         sample1 = random_sampling(n_size);
         
         # Calculations for mixed data !!
         #mixed_data = vector(); # Merges original genotype table...
         mixed_data = rbind(sample1, csv_data); #VERIFICAR OS DADOS DISSO
-        fim = Sys.time();
-        # print("ramdom_sampling")
-        # print(fim-ini);
-        # if(n_size == 25){
-        #     print(sample1);
-        #     quit();
-        #     print("que caraio");
-        # }
-        ini = Sys.time();
+        #fim = Sys.time();
+         #print("ramdom_sampling")
+         #print(fim-ini);
+
+        #ini = Sys.time();
         ht = mixed_calcs(mixed_data); # Calculates Ht;
-        fim = Sys.time();
-        #  print("mixed_calcs")
-        #  print(fim-ini);
+        #fim = Sys.time();
+          #print("mixed_calcs")
+          #print(fim-ini);
         #quit()
         # Calculations for resample !!
-        ini = Sys.time();
+        #ini = Sys.time();
         sample_calcs(sample1);
         
         # if(n_size == 30){
@@ -1279,7 +1081,7 @@ while(n_size <= total_individuals) {
         # }
         #    print "\n \$Nei_Fst = $Nei_Fst \n"; # FOR TEST ONLY
         fst_array <- append(fst_array, nei_fst);
-        fim = Sys.time();
+        #fim = Sys.time();
         # print("sample_calcs")
         # print(fim-ini);
         #VERIFICAR ESSAS FUNÇÕES SE PRECISAM MESMO
@@ -1291,7 +1093,7 @@ while(n_size <= total_individuals) {
         # quit();
         
         #r_input_HoH_HoA(allele_freq); #VERIFICAR ESSA FUNÇÃO PARA RETORNO
-        ini = Sys.time();
+        #ini = Sys.time();
         samples_five_ref = 0;
         
         aux_array = count_freq_5_sample(allele_freq, samples_five_percent);
@@ -1302,12 +1104,12 @@ while(n_size <= total_individuals) {
         samples_five_percent = samples_five_ref;
         
         repeats = repeats - 1;
-        fim = Sys.time();
+        #fim = Sys.time();
         # print("count_freq_5_sample")
         # print(fim-ini);
         #quit();
     }
-    end1 = Sys.time();
+    #end1 = Sys.time();
     #print(end1-start1);
     #quit();
     #aux_array = mean_and_sd(nClass_fiverpercent_count); #VERIFICAR ISSO, PROVAVELMETNE NÃO PRECISA DESSA FUNÇÃO
@@ -1433,10 +1235,10 @@ while(n_size <= total_individuals) {
         plot_graphs();
         print("Ploting graphs...");
         print("Finish !");
-        end = Sys.time();
-        tempoTotal = end-start;
-        print(paste0("Tempo total: ", tempoTotal));
-        quit();
+        #end = Sys.time();
+        #tempoTotal = end-start;
+        #print(paste0("Tempo total: ", tempoTotal));
+        #quit();
     }else {
         if (n_size >= total_individuals){
             n_size = total_individuals;
@@ -1446,9 +1248,9 @@ while(n_size <= total_individuals) {
     #----------------------------------------------------------------
     
     
-    tempoInterno = end1-start1;
+    #tempoInterno = end1-start1;
     
-    print(paste0("Tempo while interno: ", tempoInterno));
+    #print(paste0("Tempo while interno: ", tempoInterno));
     #print(paste0("Tempo sem while interno: ", tempoTotal-tempoInterno));
     #quit();
 }
