@@ -203,13 +203,13 @@ freq_calc <- function(numbers_hash){
 find_less_more <- function(freqs){
     #Extract the position of the less freq allele
     less_pos = match(min(unlist(freqs)), unlist(freqs))
-    less_locus = strtrim(names(unlist(freqs)[less_pos]), 6);
-    less_allele = substr(names(unlist(freqs)[less_pos]), 8, nchar(names(unlist(freqs))));
+    less_locus = strsplit(names(unlist(freqs)[less_pos]), "\\.")[[1]][1];
+    less_allele = strsplit(names(unlist(freqs)[less_pos]), "\\.")[[1]][2];
 
     #Extract the position of the more freq allele
     more_pos = match(max(unlist(freqs)), unlist(freqs))
-    more_locus = strtrim(names(unlist(freqs)[more_pos]), 6);
-    more_allele = substr(names(unlist(freqs)[more_pos]), 8, nchar(names(unlist(freqs))));
+    more_locus = strsplit(names(unlist(freqs)[more_pos]), "\\.")[[1]][1];
+    more_allele = strsplit(names(unlist(freqs)[more_pos]), "\\.")[[1]][2];
 
     local_less = paste0(less_locus, "-", less_allele);
     local_more = paste0(more_locus, "-", more_allele);
@@ -228,7 +228,6 @@ less_more_data <- function(freqs){
     #Sort the frequencies of the locus_alleles
     less_locus_freqs = sort(freqs[[locus_l]][[allele_l]][-1]);
     more_locus_freqs = sort(freqs[[locus_m]][[allele_m]][-1]);
-
     #Get frequencies of less and more locus_alleles
     less_min = less_locus_freqs[1];
     less_max = less_locus_freqs[2];
@@ -814,6 +813,7 @@ if(n_minimum == '') {
     n_minimum = 5;
     print("Using N = 5.");
 }else{
+    n_minimum = as.integer(n_minimum);
     if(n_minimum > total_individuals) {
         print("Your N is higher than the total number of individuals in the original population!");
         print("Try Again.");
@@ -834,6 +834,7 @@ if(repeat_N == '') {
     repeat_N = 50;
     print("Using 50 repeats.");
 }else{
+    repeat_N = as.integer(repeat_N); 
     if(repeat_N > 10000){
         print("Number of repetitions can not exceed 10.000!!!");
         quit();
