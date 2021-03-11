@@ -1,5 +1,5 @@
 #-------REQUESTS-------------------------
-#if (!require(Rcpp)) install.packages('Rcpp')
+if (!require(Rcpp)) install.packages('Rcpp')
 #if (!require(microbenchmark)) install.packages('microbenchmark')
 #----------------------------------------
 
@@ -167,38 +167,33 @@ freq_calc <- function(numbers_hash){
     });
     return(freq_hash);
 }
-# cppFunction('
-#     int c_freq_calc(List numbers_hash){
-#         int count = 0;
-#         //List locus_list(numbers_hash);
-#         //CharacterVector locus_name(locus_list.names());
-#         print(numbers_hash[0]);
+#C_FREQ_CALC
+#Função feita em Rcpp que calcula as frequências de cada alelo/genótipo
+cppFunction('
+    List c_freq_calc(List numbers_hash){
+        CharacterVector locus_name(numbers_hash.names());
+        List freq_hash = List::create();
+        int total_alleles = 0;
+        for(auto pLocus : locus_name){
+            std::string locus = as<std::string>(pLocus);
+            List alleles = as<List> (numbers_hash[locus])[0];
+            CharacterVector alleles_name(alleles.names());
+            NumericVector good_alleles = NumericVector::create();
 
-#         for(auto pLocus : numbers_hash){
-#             print(pLocus);
-#         }
+            for(auto pAllele : alleles_name){
+                std::string allele = as<std::string>(pAllele);
+                if(allele != "0" && allele != "0-0") good_alleles.push_back(alleles[allele], allele);
+            }
+            total_alleles = sum(good_alleles);
+            NumericVector res = good_alleles / total_alleles;
+            res.names() = good_alleles.names();
 
-#         /*for(auto pLocus : locus_name){
-#             std::string locus(pLocus);
-
-#             //List a(locus_list[locus]);
-#             //print(a);
-#             List locus(pLocus);
-#             List alleles(locus[0]);
-#             CharacterVector names(alleles.names());
-#             IntegerVector a(alleles);
-
-#             print(alleles);
-#             for(auto pAllele : a){
-#                 if(pAllele != "0"){
-#                     count++;
-#                     //print(pAllele);
-#                 }
-#             }
-#         }*/
-#         return count;
-#     }
-# ')
+            freq_hash.push_back(res, locus);
+            
+        }
+        return freq_hash;
+    }
+')
 #----------------------------------------
 find_less_more <- function(freqs){
     #Extract the position of the less freq allele
@@ -361,8 +356,8 @@ sample_calcs <- function(sample) {
 
     make_hash_count(sample);
     allelic_richness(allele_numbers);
-    allele_freq <<- freq_calc(allele_numbers);
-    gnot_freq = freq_calc(gnot_numbers);
+    allele_freq <<- c_freq_calc(allele_numbers);
+    gnot_freq = c_freq_calc(gnot_numbers);
     
     EXPCT_GNOT_freq = expct_GNOT_freq(allele_freq); #0.03 -----------------------------------
     
@@ -394,8 +389,8 @@ mixed_calcs <- function(sample) {
     names(allele_rich) <<- names(gnot_numbers) <<- names(allele_numbers) <<- loci_names; #cria o nome da coluna
 
     make_hash_count(sample); #
-    allele_freq <<- freq_calc(allele_numbers);
-    gnot_freq = freq_calc(gnot_numbers);
+    allele_freq <<- c_freq_calc(allele_numbers);
+    gnot_freq = c_freq_calc(gnot_numbers);
     EXPCT_GNOT_freq = expct_GNOT_freq(allele_freq);
     he_calc(allele_freq, n_size, '1');
 
@@ -887,7 +882,7 @@ print(paste("N class multiple:", n_minimum));
 print(paste("Resample per N:", repeat_N));
 print(paste("Alleles rares: bellow", freqMin));
 
-cat ("Press any key to continue"); 
+cat ("Press any key to continue\n"); 
 #readLines("stdin", n=1);
 #print("--- Hashes ---");
 
@@ -896,18 +891,10 @@ allelic_richness(allele_numbers); #MUDAR PARA RETORNAR
 orig_allele_numbers = allele_numbers;
 orig_gnot_numbers = gnot_numbers;
 orig_allele_rich = allele_rich;
-#start = Sys.time();
-#print("freq_calc");
-#orig_allele_freq = c_freq_calc(orig_allele_numbers);
-orig_allele_freq = freq_calc(orig_allele_numbers);
-orig_gnot_freq = freq_calc(orig_gnot_numbers);  #0.02588487 secs
 
-#end = Sys.time();
-#print("Tempo: ");
-#print(end-start);
-#print(orig_allele_freq);
-#print(orig_gnot_freq);
-#quit();
+orig_allele_freq = c_freq_calc(orig_allele_numbers);
+orig_gnot_freq = c_freq_calc(orig_gnot_numbers)
+
 aux_array = freq_5(orig_allele_freq);
 orig_five_percent_ref = aux_array[[1]]; five_percent_n = aux_array[[2]];
 
@@ -1011,7 +998,7 @@ rogersD_table = vector();
 he_data = ho_data = vector(); # Mean, sd, min and max He/Ho for each locus in each n class
 he_data <- append(he_data, paste0(total_individuals,"\n",total_loci,"\n",n_minimum));
 ho_data <- append(ho_data, paste0(total_individuals,"\n",total_loci,"\n",n_minimum));
-#start = Sys.time();
+start = Sys.time();
 while(n_size <= total_individuals) {
     print(paste0("Calculating data for ", n_size, " Class."));
     
@@ -1239,7 +1226,7 @@ while(n_size <= total_individuals) {
         #end = Sys.time();
         #tempoTotal = end-start;
         #print(paste0("Tempo total: ", tempoTotal));
-        #quit();
+        quit();
     }else {
         if (n_size >= total_individuals){
             n_size = total_individuals;
@@ -1248,9 +1235,8 @@ while(n_size <= total_individuals) {
     }
     #----------------------------------------------------------------
     
-    
-    #tempoInterno = end1-start1;
-    
+    #end = Sys.time();
+    #print(end-start);
     #print(paste0("Tempo while interno: ", tempoInterno));
     #print(paste0("Tempo sem while interno: ", tempoTotal-tempoInterno));
     #quit();
