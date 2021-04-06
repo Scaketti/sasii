@@ -1,0 +1,28 @@
+sample_name: your_file_name.csv
+str_type: 1
+indef_number: -9
+begin_line: 1
+sample_size: 5
+resampling: 50
+min_frequence: 0.05
+separator: 59
+read_lines: 50
+begin_column: 1
+
+
+sample_name > CSV file name
+str_type > CSV/Structure file's style ('1' one line alleles; '2' two lines alleles)
+indef_number > Character used on indefined alleles
+begin_line > Line number of population data
+sample_size > Define sample size of population
+resampling > Define number of resample for each N class
+min_frequence > Define minimal frequence of allele to be preserved
+separator > ASCII value representing the character which separates each allele/locus
+read_lines > Number of lines to be read (important for multipopulation files)
+begin_column > Define column number which starts data (see csv header to know)
+
+Commons used ASCII values
+Space   - 32
+TAB     - 9
+;       - 59
+,       - 44
