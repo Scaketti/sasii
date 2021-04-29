@@ -38,11 +38,18 @@ save_array_output <- function(lines, mid_name){
 # For type 2 csv file, create a new dataframe to change the individual allele order, just for padronization
 csv_adjust <- function(csv_data){
     locus = "";
-    #csv_data = csv_data[-length(csv_data)];
+
+    # if(str_type == 2){
+    #     csv_data = csv_data[-nrow(csv_data),];
+    # }
 
     #Remove undesirable columns
     if(first_column_data > 1){
         csv_data = csv_data[,-1:-(first_column_data-1)];
+    }
+
+    if(is_gbs == 1){
+        csv_data[csv_data==indef] = "indef"; #Look for each indefined allele and changes its value
     }
 
     #If csv individual alleles is in just one line, copy the name of every locus adding ".2"
@@ -53,7 +60,6 @@ csv_adjust <- function(csv_data){
             }else{locus = lines;}
         }
     }else{
-        csv_data[csv_data==indef] = "indef"; #Look for each indefined allele and changes its value
         new_data = data.frame(matrix(ncol = ncol(csv_data) * 2, nrow = 0)); #Creates a temp variable to change csv style
         dplc_locus = array(unlist(rbind(names(csv_data),paste0(names(csv_data), ".2")))); #Duplicate locus columns
         names(new_data) <- dplc_locus;
@@ -63,6 +69,7 @@ csv_adjust <- function(csv_data){
             new_indv = data.frame(matrix(data = unlist(rbind(csv_data[indv,],csv_data[indv+1,])), nrow = 1, ncol = ncol(csv_data)*2)); #Create a "list" of alternating values between line A and B
             names(new_indv) <- dplc_locus;
             new_data <<- rbind(new_data, new_indv); #Bind new generated row into the new csv_data
+
         });
 
         csv_data = new_data;
@@ -76,17 +83,22 @@ count_allele_gnot <- function(data){
         alleles = unlist(subset(data, TRUE, c(locus, paste0(locus,".2"))));
 
         #Verify csv file to remove indefined alleles from counting
-        if(str_type == 2){
+        if(is_gbs == 1){
             alleles = alleles[alleles != "indef"];
             counted_alleles = table(droplevels(alleles[alleles != "indef"]));
         }else{
             counted_alleles = table(alleles);
         }
 
-        allele_numbers[[locus]] <<- list(counted_alleles[is.numeric(counted_alleles)]); 
+        if(length(counted_alleles) > 0){
+            allele_numbers[[locus]] <<- list(counted_alleles[is.numeric(counted_alleles)]);
 
-        counted_gnot = table(paste0(alleles[seq(1, length(alleles)/2)], "-", alleles[seq(length(alleles)/2 + 1, length(alleles))]))
-        gnot_numbers[[locus]] <<- list(counted_gnot);
+            counted_gnot = table(paste0(alleles[seq(1, length(alleles)/2)], "-", alleles[seq(length(alleles)/2 + 1, length(alleles))]));
+            gnot_numbers[[locus]] <<- list(counted_gnot);
+        }else{
+            allele_numbers <<- allele_numbers[names(allele_numbers) != locus];
+            gnot_numbers <<- gnot_numbers[names(gnot_numbers) != locus];
+        }
     });
 }
 #----------------------------------------
@@ -105,8 +117,12 @@ allele_count <- function(allele_hash){
 #----------------------------------------
 #Counts alleles numbers for each locus to obtain allelic richness
 allelic_richness <- function(allele_hash){
-    a = lapply(names(allele_hash), function(locus){
-        allele_rich[[locus]] <<- length(allele_hash[[locus]]);
+    a = lapply(names(allele_rich), function(locus){
+        if(length(allele_hash[[locus]]) > 0 ){
+            allele_rich[[locus]] <<- length(allele_hash[[locus]]);
+        }else{
+            allele_rich <<- allele_rich[names(allele_rich) != locus];
+        }
     });
 }
 #----------------------------------------
@@ -218,34 +234,40 @@ less_more_data <- function(freqs){
 #----------------------------------------
 # Calculate expected genotypes frquencies from HoH with allelic freq
 expct_GNOT_freq <- function(alelic_freq){ 
-    EXPCT_GNOT_freq = array(rep(array(), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1));
-    names(EXPCT_GNOT_freq) <- loci_names; # Hash with expected genotypes frequencies
+    EXPCT_GNOT_freq = array(rep(array(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1));
+    names(EXPCT_GNOT_freq) <- names(orig_allele_numbers); # Hash with expected genotypes frequencies
 
-    sorted_alelic_freq = sort(names(alelic_freq));
+    sorted_locus = sort(names(EXPCT_GNOT_freq));
 
-    a = lapply(sorted_alelic_freq, function(locus){
+    a = lapply(sorted_locus, function(locus){
         exp_gnot_freq = 0;
-        generated_genotypes = generate_genotypes(names(alelic_freq[[locus]]));
+        
+        if(length(alelic_freq[[locus]]) > 0){
+            generated_genotypes = generate_genotypes(names(alelic_freq[[locus]]));
 
-        EXPCT_GNOT_freq[locus] <<- list(array(rep(array(), length(generated_genotypes)), c(length(generated_genotypes), 1)));
-        names(EXPCT_GNOT_freq[[locus]]) <<- generated_genotypes;
+            EXPCT_GNOT_freq[locus] <<- list(array(rep(array(), length(generated_genotypes)), c(length(generated_genotypes), 1)));
+            names(EXPCT_GNOT_freq[[locus]]) <<- generated_genotypes;
 
-        lapply(generated_genotypes, function(genotype){
-            
-            aux_array = strsplit(genotype, '-')[[1]];
-            allele1 = aux_array[1]; allele2 = aux_array[2];
+            lapply(generated_genotypes, function(genotype){
+                
+                aux_array = strsplit(genotype, '-')[[1]];
+                allele1 = aux_array[1]; allele2 = aux_array[2];
 
-            if(allele1 == allele2){
-                exp_gnot_freq = alelic_freq[[locus]][allele1] * alelic_freq[[locus]][allele2];
-            }else {
-                if (allele1 != allele2) {
-                    exp_gnot_freq = 2 * (alelic_freq[[locus]][allele1] * alelic_freq[[locus]][allele2]);
+                if(allele1 == allele2){
+                    exp_gnot_freq = alelic_freq[[locus]][allele1] * alelic_freq[[locus]][allele2];
+                }else {
+                    if (allele1 != allele2) {
+                        exp_gnot_freq = 2 * (alelic_freq[[locus]][allele1] * alelic_freq[[locus]][allele2]);
+                    }
                 }
-            }
 
-            EXPCT_GNOT_freq[[locus]][genotype] <<- exp_gnot_freq;
-        });
+                EXPCT_GNOT_freq[[locus]][genotype] <<- exp_gnot_freq;
+            });
+        }else{
+            EXPCT_GNOT_freq <<- EXPCT_GNOT_freq[names(EXPCT_GNOT_freq) != locus];
+        }
     });
+
     return(EXPCT_GNOT_freq);
 }
 #----------------------------------------
@@ -319,11 +341,12 @@ random_sampling <- function(n) {
 #----------------------------------------
 # Calculate important information for each sample
 sample_calcs <- function(sample) {
-    allele_rich <<- gnot_numbers <<- allele_numbers <<- array(rep(array(), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1)); #cria um array de tamanho loci
-    names(allele_rich) <<- names(gnot_numbers) <<- names(allele_numbers) <<- loci_names; #cria o nome da coluna
+    allele_rich <<- gnot_numbers <<- allele_numbers <<- array(rep(array(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1)); #cria um array de tamanho loci
+    names(allele_rich) <<- names(gnot_numbers) <<- names(allele_numbers) <<- names(orig_allele_numbers); #cria o nome da coluna
 
     count_allele_gnot(sample);
     allelic_richness(allele_numbers);
+
     allele_freq <<- freq_calc(allele_numbers);
     gnot_freq = freq_calc(gnot_numbers);
     EXPCT_GNOT_freq = expct_GNOT_freq(allele_freq); 
@@ -332,8 +355,10 @@ sample_calcs <- function(sample) {
     multi_he = local_multi_he;
 
     he_mean <<- append(he_mean, as.numeric(multi_he));
+
     he_diff <<- het_diff_calc(he_orig, he_diff, he);
-    mean_freq_prep1(allele_freq);
+
+    mean_freq_prep(allele_freq);
     sorted_orig_gnot_freq = sort(names(orig_gnot_freq));
 
     ho_calc(gnot_freq);
@@ -350,8 +375,8 @@ sample_calcs <- function(sample) {
 }
 #----------------------------------------
 mixed_calcs <- function(sample) {
-    allele_rich <<- gnot_numbers <<- allele_numbers <<- array(rep(array(), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1)); #cria um array de tamanho loci
-    names(allele_rich) <<- names(gnot_numbers) <<- names(allele_numbers) <<- loci_names; #cria o nome da coluna
+    allele_rich <<- gnot_numbers <<- allele_numbers <<- array(rep(array(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1)); #cria um array de tamanho loci
+    names(allele_rich) <<- names(gnot_numbers) <<- names(allele_numbers) <<- names(orig_allele_numbers); #cria o nome da coluna
 
     count_allele_gnot(sample);
     allele_freq <<- freq_calc(allele_numbers);
@@ -376,7 +401,7 @@ he_calc <- function(local_hash, number_id, type) {
 
         he_simple = 1 - somatory;
         he[[locus]] <<- he_simple * ((2*number_id)/((2*number_id)-1));
-    
+
         if(type == '2') {
             he_for_range[[locus]] <<- append(he_for_range[[locus]], he[[locus]]); 
         }
@@ -415,30 +440,35 @@ nei_d <- function(freq2) {
 
     sorted_freq1 = sort(names(freq1));
     a = lapply(sorted_freq1, function(locus) {
-        l <<- l + 1;
+        if(length(freq2[[locus]]) > 0){ #In case of GBS data, random individuals might cause NULL loci
+            l <<- l + 1;
 
-        sorted_locus = sort(names(freq1[[locus]]));
-        lapply(sorted_locus, function(allele) {
-            if ( is.na(freq2[[locus]][allele])){
-                freq2[[locus]][allele] <<- 0;
-            }
-            jx <<- freq1[[locus]][allele] ** 2;
-            jx_array <<- append(jx_array, jx);
-            jy <<- freq2[[locus]][allele] ** 2;
-            jy_array <<- append(jy_array, jy);
-        });
+            sorted_locus = sort(names(freq1[[locus]]));
+            lapply(sorted_locus, function(allele) {
+                if (is.na(freq2[[locus]][allele])){
+                    freq2[[locus]][allele] <<- 0;
+                }
+                jx <<- freq1[[locus]][allele] ** 2;
+                jx_array <<- append(jx_array, jx);
+                
+                jy <<- freq2[[locus]][allele] ** 2;
+                jy_array <<- append(jy_array, jy);
+            });
+        }
     });
 
     a = lapply(sorted_freq1, function(locus) {
         sorted_locus = sort(names(freq1[[locus]]));
 
-        lapply(sorted_locus, function(allele) {
-            if(is.na(freq2[[locus]][allele]) || freq2[[locus]][allele] == 0){ jxy <<- 0;}
-            else {
-                jxy <<- freq1[[locus]][allele] * freq2[[locus]][allele];
-            }
-            jxy_array <<- append(jxy_array, jxy);
-        });
+        if(length(freq2[[locus]]) > 0){
+            lapply(sorted_locus, function(allele) {
+                if(is.na(freq2[[locus]][allele]) || freq2[[locus]][allele] == 0){ jxy <<- 0;}
+                else {
+                    jxy <<- freq1[[locus]][allele] * freq2[[locus]][allele];
+                }
+                jxy_array <<- append(jxy_array, jxy);
+            });
+        }
     });
 
     jx = sum(jx_array)/l;
@@ -468,7 +498,6 @@ rogers_d <- function(freq2) {
     a = lapply(sorted_freq1, function(locus){
         l <<- l + 1;
         diff_array = vector();
-        #print(locus);
         sorted_locus = sort(names(freq1[[locus]]));
 
         lapply(sorted_locus, function(allele) {
@@ -489,17 +518,21 @@ rogers_d <- function(freq2) {
     return (rogersD);
 }
 #----------------------------------------
-mean_freq_prep1 <- function(freqs) {
+mean_freq_prep <- function(freqs) {
     sorted_orig_allele_freq = sort(names(orig_allele_freq));
 
     a = lapply(sorted_orig_allele_freq, function(locus){
         sorted_locus = sort(names(orig_allele_freq[[locus]]));
-
+        #print(locus);
+        #print(allele_freq[[locus]]);
+        
         lapply(sorted_locus, function(allele){
-            if(is.na(allele_freq[[locus]][allele])){
-                allele_freq[[locus]][allele] <<- 0;
+            if(length(allele_freq[[locus]]) > 0){
+                if(is.na(allele_freq[[locus]][allele])){
+                    allele_freq[[locus]][allele] <<- 0;
+                }
+                mean_allele_freq[[locus]][allele] <<- list(append(unlist(mean_allele_freq[[locus]][allele]), allele_freq[[locus]][allele]));
             }
-            mean_allele_freq[[locus]][allele] <<- list(append(unlist(mean_allele_freq[[locus]][allele]), allele_freq[[locus]][allele]));
         });
     });
 }
@@ -527,24 +560,28 @@ freq_diff_calc <- function(freqs) {
 }
 #----------------------------------------
 freq_5 <- function(freq_hash) {
-    five_percent_hash = array(rep(array(), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1));
-    names(five_percent_hash) <- loci_names; # HoH to save alleles with freq higher than freqMin
+    five_percent_hash = array(rep(array(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1));
+    names(five_percent_hash) <- names(orig_allele_numbers); # HoH to save alleles with freq higher than freqMin
     five_percent_n = 0;
 
-    sorted_freq_hash = sort(names(freq_hash));
+    sorted_freq_hash = sort(names(five_percent_hash));
 
     for(locus in sorted_freq_hash) {
-        sorted_locus = sort(names(freq_hash[[locus]]));
-
-        for(key in sorted_locus){
-            if(as.numeric(freq_hash[[locus]][key]) >= freqMin){
-                if(is.na(five_percent_hash[[locus]])){
-                    five_percent_hash[[locus]] = c(key);
-                }else{
-                    five_percent_hash[[locus]] = list(c(unlist(five_percent_hash[[locus]]), key));
+        if(length(freq_hash[[locus]]) > 0 ){
+            sorted_locus = sort(names(freq_hash[[locus]]));
+        
+            for(key in sorted_locus){
+                if(as.numeric(freq_hash[[locus]][key]) >= freqMin){
+                    if(is.na(five_percent_hash[[locus]])){
+                        five_percent_hash[[locus]] = c(key);
+                    }else{
+                        five_percent_hash[[locus]] = list(c(unlist(five_percent_hash[[locus]]), key));
+                    }
+                    five_percent_n = five_percent_n + 1; #writes in local variable with same name as global one
                 }
-                five_percent_n = five_percent_n + 1; #writes in local variable with same name as global one
             }
+        }else{
+            five_percent_hash = five_percent_hash[names(five_percent_hash) != locus];
         }
     }
     return(list(five_percent_hash, five_percent_n)); #returning hash as reference 
@@ -563,7 +600,6 @@ count_freq_5_sample <- function(freq_hash, sample_local) {
         local_count = 0;
 
         lapply(sorted_freq_locus, function(key){
-            #print(paste(key, "= ", freq_hash[[locus]][key], key %in% local_array));
             if((freq_hash[[locus]][key] != 0) && (key %in% local_array)) { #verificar se está correto
                 local_count <<- local_count + 1;
                 general_local_count <<- general_local_count + 1;
@@ -580,16 +616,12 @@ count_freq_5_sample <- function(freq_hash, sample_local) {
 r_input_HoHoA_array <- function(target_hash1) {
     array_final = list(paste0('N', '\t', 'ID', '\t', 'repeat_values'));
     sorted_target_hash1 = sort(names(target_hash1));
-    print(names(target_hash1));
     for(local_n in sorted_target_hash1) {
         sorted_local_n = sort(names(local_n));
-        print(sorted_local_n);
         for(array_ in sorted_local_n) {
-            print(array_final);
             array_final <- append(array_final, paste0(local_n, '\t', array_, '\t', target_hash1[[local_n]][[array_]]));
         }
     }
-    print(array_final);
     return(array_final);
 }
 #----------------------------------------
@@ -606,6 +638,7 @@ plot_graphs <- function() {
 #----------------------------------------
 het_diff_calc <- function(hash, local_hash, orig_hash) {
     sorted_orig_hash = sort(names(orig_hash));
+
     for(locus in sorted_orig_hash) {
         local_hash[[locus]] <- append(local_hash[[locus]], abs(orig_hash[[locus]] - hash[[locus]]));
     }
@@ -631,7 +664,7 @@ print("SaSii - Sample_Size Impact , 'R Beta version ', (2021)");
 print(paste("Running in:",os));
 
 if(file.exists("config")){
-    config = read_lines("config", n_max = 10);
+    config = read_lines("config", n_max = 12);
 }else{
     config = NA;
 }
@@ -647,12 +680,13 @@ if(!is.na(config[1])){
     separator = as.character(strsplit(config[8], " ")[[1]][2]);
     nLines = as.numeric(strsplit(config[9], " ")[[1]][2]);
     first_column_data = as.integer(strsplit(config[10], " ")[[1]][2]);
-    print(paste(separator, intToUtf8(separator)));
+    is_gbs = as.integer(strsplit(config[11], " ")[[1]][2]);
+    header_line = as.integer(strsplit(config[12], " ")[[1]][2]);
 }
 
 if(is.na(config[1])){
     if(length(args) == 0){
-        cat("Put you input file path: ");
+        cat("Put your input file path: ");
         path = as.character(readLines("stdin", n=1));
     }else{
         path = args;
@@ -685,18 +719,18 @@ if(!is.null(list.files(paste(pattern = ".dat")))){
     unlink(paste0("fig","*",".dat"));
 }
 
-make_path_files('1-5percent_rate', 1);
-make_path_files('2-freq_dif', 2);
-make_path_files('3-freq_impact', 3);
-make_path_files('4-He_impact', 4);
-make_path_files('5-meanHe_impact', 5);
-make_path_files('6-Fst', 6);
-make_path_files('7-Nei', 7);
-make_path_files('8-Roger', 8);
-make_path_files('9-meanHo_impact', 9);
-make_path_files('10-Ho_impact', 10);
-make_path_files('11-Ho_diff', 11);
-make_path_files('12-He_diff', 12);
+# make_path_files('1-5percent_rate', 1);
+# make_path_files('2-freq_dif', 2);
+# make_path_files('3-freq_impact', 3);
+# make_path_files('4-He_impact', 4);
+# make_path_files('5-meanHe_impact', 5);
+# make_path_files('6-Fst', 6);
+# make_path_files('7-Nei', 7);
+# make_path_files('8-Roger', 8);
+# make_path_files('9-meanHo_impact', 9);
+# make_path_files('10-Ho_impact', 10);
+# make_path_files('11-Ho_diff', 11);
+# make_path_files('12-He_diff', 12);
 
 # Defining the begining of data.---------------
 if(is.na(config[1])){
@@ -711,13 +745,37 @@ first_line_data = first_line_data - 1;
 
 csv_data = "";
 
-csv_data = csv_adjust(read.csv(file = path, sep = intToUtf8(separator), nrows = nLines, skip = first_line_data)); #mudar o nome
+head = TRUE;
+if(str_type == 1){
+    rows = nLines-first_line_data;
+}else{
+    rows = nLines-first_line_data-1;
+}
+
+if(first_line_data > 1){
+    head = FALSE;
+    rows = nLines-first_line_data;
+}
+
+csv_data = csv_adjust(read.csv(file = path, sep = intToUtf8(separator), nrows = rows, skip = first_line_data, header = head)); #mudar o nome
+
+if(header_line > 1){
+    locus = strsplit(readLines(path, n = 1), intToUtf8(separator))[[1]];
+    if(first_column_data > 1){
+        locus = locus[-c(1,2)];
+    }
+    if(str_type == 2){
+        locus = array(unlist(rbind(locus,paste0(locus, ".2")))); #Duplicate locus columns
+    }
+    names(csv_data) <- locus;
+}
 
 #if(is.na(ploid)) {
 ploid = 2; #May be a future change for multiploid species
     #print(paste0("Using ", ploid, "-ploid"));
 #}
-loci_names = names(csv_data);
+
+loci_names = names(csv_data); # Selects all loci names which are countable (important for GBS data)
 loci_names <- sort(loci_names[seq(1,length(loci_names), ploid)]); #Selects just one value for each locus(sorted)
 total_loci = length(names(csv_data))/ploid;
 total_individuals = nrow(csv_data);
@@ -783,7 +841,10 @@ if(freqMin == ''){
 
 print(paste("Using", freqMin, "as minimal frequence."));
 
-if(os == "Linux") {
+cat ("Press enter to continue\n"); 
+readLines("stdin", n=1);
+
+if(os == "Linux" || os == "Darwin") {
     system("clear");
 }else{
     system("cls");
@@ -801,14 +862,14 @@ names(he_for_range) <- names(ho_for_range) <- loci_names;
 count_allele_gnot(csv_data); 
 alleles_n = allele_count(allele_numbers);
 
+print(paste("Selected file:", path));
 print(paste("Number of alleles:", alleles_n));
 print(paste("N class multiple:", n_minimum));
 print(paste("Resample per N:", repeat_N));
 print(paste("Alleles rares: bellow", freqMin));
 
-cat ("Press any key to continue\n"); 
+cat ("Press enter to continue\n"); 
 readLines("stdin", n=1);
-#print("--- Hashes ---");
 
 allelic_richness(allele_numbers);
 
@@ -817,23 +878,23 @@ orig_gnot_numbers = gnot_numbers;
 orig_allele_rich = allele_rich;
 
 orig_allele_freq = freq_calc(orig_allele_numbers);
-orig_gnot_freq = freq_calc(orig_gnot_numbers)
+orig_gnot_freq = freq_calc(orig_gnot_numbers);
 
 aux_array = freq_5(orig_allele_freq);
 orig_five_percent_ref = aux_array[[1]]; five_percent_n = aux_array[[2]];
 
 orig_five_percent = orig_five_percent_ref;
 
-samples_five_percent = array(rep(list(), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1));
-names(samples_five_percent) <- loci_names;
+samples_five_percent = array(rep(list(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1));
+names(samples_five_percent) <- names(orig_allele_numbers);
 
 freq_arrays_complete = list();
 
 aux_array = find_less_more(orig_allele_freq);
 less_frq_all = aux_array[[1]]; more_frq_all = aux_array[[2]];
 
-he = ho = array(rep(array(), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1));
-names(he) <- names(ho) <- loci_names;
+he = ho = array(rep(array(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1));
+names(he) <- names(ho) <- names(orig_allele_numbers);
 
 # Takes the expct gnot freq for original data
 expct_gnot_freq = expct_GNOT_freq(orig_allele_freq);
@@ -843,7 +904,7 @@ he_calc(orig_allele_freq, total_individuals, '1');
 he_orig = he;
 multi_he_orig = local_multi_he;
 
-a = lapply(loci_names, function(locus){
+a = lapply(names(orig_allele_numbers), function(locus){
     he[[locus]] <<- 0;
 });
 
@@ -913,21 +974,16 @@ while(n_size <= total_individuals) {
         });
     });
 
-    he_for_range = ho_for_range = array(rep(list(5), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1)); #cria um array de tamanho loci
-    names(he_for_range) <- names(ho_for_range) <- loci_names;
+    he_for_range = ho_for_range = array(rep(list(5), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1)); #cria um array de tamanho loci
+    names(he_for_range) <- names(ho_for_range) <- names(orig_allele_numbers);
     freq_arrays_complete[[as.character(n_size)]] = list();
 
     while(repeats > 0) { # Do iterations for \$repeats resamples.
-        # print(repeats);
-        # print(" ")
-        # print(" ")
-        # print(" ")
-
         allele_freq = gnot_freq = ht = vector();
         multi_ht = multi_he = multi_ho = nei_fst = weir_theta = 0;
 
-        he_diff <- ho_diff <- array(rep(list(5), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1)); #cria um array de tamanho loci
-        names(he_diff) <- names(ho_diff) <- loci_names;
+        he_diff <- ho_diff <- array(rep(list(5), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1)); #cria um array de tamanho loci
+        names(he_diff) <- names(ho_diff) <- names(orig_allele_numbers);
 
         # Resampling data !!
         sample1 = random_sampling(n_size);
@@ -939,9 +995,8 @@ while(n_size <= total_individuals) {
         
         fst_array <- append(fst_array, nei_fst);
         samples_five_ref = 0;
-        
+
         aux_array = count_freq_5_sample(allele_freq, samples_five_percent);
-        
         five_percent_sample_count = aux_array[[1]]; samples_five_ref = aux_array[[2]];
 
         nClass_fiverpercent_count <- append(nClass_fiverpercent_count, five_percent_sample_count);
