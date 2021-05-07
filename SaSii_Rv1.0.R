@@ -1,5 +1,5 @@
 #-------REQUESTS-------------------------
-if (!require(Rcpp)) install.packages('Rcpp')
+#if (!require(Rcpp)) install.packages('Rcpp')
 if (!require(readr)) install.packages('readr')
 #if (!require(microbenchmark)) install.packages('microbenchmark')
 #----------------------------------------
@@ -48,7 +48,7 @@ csv_adjust <- function(csv_data){
         csv_data = csv_data[,-1:-(first_column_data-1)];
     }
 
-    if(is_gbs == 1){
+    if(is_gbs == 1 && indef != '-'){
         csv_data[csv_data==indef] = "indef"; #Look for each indefined allele and changes its value
     }
 
@@ -83,7 +83,7 @@ count_allele_gnot <- function(data){
         alleles = unlist(subset(data, TRUE, c(locus, paste0(locus,".2"))));
 
         #Verify csv file to remove indefined alleles from counting
-        if(is_gbs == 1){
+        if(is_gbs == 1 && indef != '-'){
             alleles = alleles[alleles != "indef"];
             counted_alleles = table(droplevels(alleles[alleles != "indef"]));
         }else{
@@ -126,56 +126,59 @@ allelic_richness <- function(allele_hash){
     });
 }
 #----------------------------------------
-# Old freq_calc function
-# freq_calc <- function(numbers_hash){
-#     freq_hash = array(rep(array(), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1)); #cria um array de tamanho loci
-#     names(freq_hash) <- loci_names;
-#     sorted_numbers_hash = sort(names(numbers_hash));
+# Calculate frequencies for alleles and genotypes. Get counted alleles and genotypes divide by the sum of the counted alleles in locus
+# Ex: One locus has two alleles: allele_158 -> 2 and allele_202 -> 8. The sum of alleles is 10. 
+# So the respectives frequencies are: allele_158 -> 0.2 and allele_202 -> 0.8.
+freq_calc <- function(numbers_hash){
+    freq_hash = array(rep(array(), ncol(csv_data)/ploid), c(ncol(csv_data)/ploid, 1)); #cria um array de tamanho loci
+    names(freq_hash) <- loci_names;
+    sorted_numbers_hash = sort(names(numbers_hash));
 
-#     a = lapply(sorted_numbers_hash, function(locus){
-#         sorted_locus_hash = sort(names(numbers_hash[[locus]][[1]]));
-#         #Alleles is a list without lost data
-#         good_data = as.character(unlist(
-#             lapply(sorted_locus_hash, 
-#                    function(x) x[(which(x != '000' & x != '000-000' & 
-#                                         x != '0' & x != '0-0'))])));
+    a = lapply(sorted_numbers_hash, function(locus){
+        sorted_locus_hash = sort(names(numbers_hash[[locus]][[1]]));
+        #Alleles is a list without lost data
+        good_data = as.character(unlist(
+            lapply(sorted_locus_hash, 
+                   function(x) x[(which(x != '000' & x != '000-000' & 
+                                        x != '0' & x != '0-0'))])));
 
-#         freq_hash[[locus]] <<- list(numbers_hash[[locus]][[1]][good_data]); #Creates a copy of the variable type
-#         total_alleles = sum(numbers_hash[[locus]][[1]][good_data]);
+        freq_hash[[locus]] <<- list(numbers_hash[[locus]][[1]][good_data]); #Creates a copy of the variable type
+        total_alleles = sum(numbers_hash[[locus]][[1]][good_data]);
 
-#         freq_hash[[locus]] <<- numbers_hash[[locus]][[1]][good_data] / total_alleles; #Calculate the frequency for each element
-#     });
-#     return(freq_hash);
-# }
+        freq_hash[[locus]] <<- numbers_hash[[locus]][[1]][good_data] / total_alleles; #Calculate the frequency for each element
+    });
+    return(freq_hash);
+}
+
 #C_FREQ_CALC
 # Calculate frequencies for alleles and genotypes. Get counted alleles and genotypes divide by the sum of the counted alleles in locus
 # Ex: One locus has two alleles: allele_158 -> 2 and allele_202 -> 8. The sum of alleles is 10. 
 # So the respectives frequencies are: allele_158 -> 0.2 and allele_202 -> 0.8.
-cppFunction('
-    List freq_calc(List numbers_hash){
-        CharacterVector locus_name(numbers_hash.names());
-        List freq_hash = List::create();
-        int total_alleles = 0;
-        for(auto pLocus : locus_name){
-            std::string locus = as<std::string>(pLocus);
-            List alleles = as<List> (numbers_hash[locus])[0];
-            CharacterVector alleles_name(alleles.names());
-            NumericVector good_alleles = NumericVector::create();
+# cppFunction('
+#     List freq_calc(List numbers_hash){
+#         CharacterVector locus_name(numbers_hash.names());
+#         List freq_hash = List::create();
+#         int total_alleles = 0;
+#         for(auto pLocus : locus_name){
+#             std::string locus = as<std::string>(pLocus);
+#             List alleles = as<List> (numbers_hash[locus])[0];
+#             CharacterVector alleles_name(alleles.names());
+#             NumericVector good_alleles = NumericVector::create();
 
-            for(auto pAllele : alleles_name){
-                std::string allele = as<std::string>(pAllele);
-                if(allele != "0" && allele != "0-0") good_alleles.push_back(alleles[allele], allele);
-            }
-            total_alleles = sum(good_alleles);
-            NumericVector res = good_alleles / total_alleles;
-            res.names() = good_alleles.names();
+#             for(auto pAllele : alleles_name){
+#                 std::string allele = as<std::string>(pAllele);
+#                 if(allele != "0" && allele != "0-0") good_alleles.push_back(alleles[allele], allele);
+#             }
+#             total_alleles = sum(good_alleles);
+#             NumericVector res = good_alleles / total_alleles;
+#             res.names() = good_alleles.names();
 
-            freq_hash.push_back(res, locus);
+#             freq_hash.push_back(res, locus);
             
-        }
-        return freq_hash;
-    }
-')
+#         }
+#         return freq_hash;
+#     }
+# ')
 #----------------------------------------
 # Get smaller and bigger frequencies values from population, extrating their respectives locus and allele.
 find_less_more <- function(freqs){
