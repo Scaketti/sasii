@@ -172,7 +172,7 @@ ggsave("8-Roger.png", width= 6, heigh=4, units="in", dpi=300)
 # Trocar He por Ho, rever col names (sd, min, max)
 #####
 #import and adjust data frame
-df <- read.table("9-meanHo_impact.txt", skip=3)
+df <- read.table("9-meanHo_impact.txt")
 colnames(df) <- c("n", "var", "sd", "min", "max")
 
 #plot the graphic and save as vector
@@ -243,3 +243,8 @@ p <- ggplot(df, aes(x=n, y=diff,group=n)) +
   theme_classic()
 
 ggsave("12-He_diff.png", width= 6, heigh=4, units="in", dpi=300)
+
+#Change file extension
+files <- list.files(pattern="*.txt")
+newfiles <- gsub(".txt", ".sso", files)
+file.rename(files, newfiles)
