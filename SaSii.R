@@ -207,14 +207,16 @@ less_more_data <- function(freqs){
     local_meanL = local_SDL = local_meanM = local_SDM = 0;
     less_min = less_max = more_min = more_max = 0;
 
+    
+
     #Sort the frequencies of the locus_alleles
     less_locus_freqs = sort(freqs[[locus_l]][[allele_l]][-1]);
     more_locus_freqs = sort(freqs[[locus_m]][[allele_m]][-1]);
     #Get frequencies of less and more locus_alleles
     less_min = less_locus_freqs[1];
-    less_max = less_locus_freqs[2];
+    less_max = less_locus_freqs[length(less_locus_freqs)];
     more_min = more_locus_freqs[1];
-    more_max = more_locus_freqs[2];
+    more_max = more_locus_freqs[length(more_locus_freqs)];
 
     #Calculate the mean and SD of locus
     local_meanL = sprintf("%.5f", mean(less_locus_freqs));

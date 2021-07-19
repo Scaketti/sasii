@@ -84,7 +84,7 @@ df <- separate(data = df, col = locus, into = c("freq", "allele"), sep=8)
 #plot the graphic and save as vector
 p <- ggplot(df, aes(n, var, group=allele, color=allele))+
   geom_errorbar(aes(ymin=min, ymax=max), width=.2) +
-  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var), fill="white", fatten = 0)+
+  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var), fill="white")+
   scale_y_continuous(name="Allele frquency")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
@@ -100,8 +100,8 @@ loci <- nlevels(factor(df$locus))
 #plot the graphic and save as vector
 p <- ggplot(df, aes(n, var, group=locus))+
   geom_errorbar(aes(ymin=min, ymax=max), width=.2) +
-  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var), fill="white", fatten = 0)+
-  facet_wrap(~locus, nrow=loci/4)+
+  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var), fill="white")+
+  facet_wrap(~locus, nrow=loci/3)+
   scale_y_continuous(name="Expected heterozigosity")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
@@ -115,7 +115,7 @@ colnames(df) <- c("n", "var", "sd", "min", "max")
 #plot the graphic and save as vector
 p <- ggplot(df, aes(n, var))+
   geom_errorbar(aes(ymin=min, ymax=max), width=.2) +
-  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var),fill="white" ,fatten = 0)+
+  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var),fill="white" )+
   scale_y_continuous(name="Mean expected heterozigosity")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
@@ -178,7 +178,7 @@ colnames(df) <- c("n", "var", "sd", "min", "max")
 #plot the graphic and save as vector
 p <- ggplot(df, aes(n, var))+
   geom_errorbar(aes(ymin=min, ymax=max), width=.2) +
-  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var),fill= "white", fatten = 0)+
+  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var),fill= "white")+
   scale_y_continuous(name="Mean observed heterozigosity")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
@@ -194,8 +194,8 @@ loci <- nlevels(factor(df$locus))
 #plot the graphic and save as vector
 p <- ggplot(df, aes(n, var, group=locus))+
   geom_errorbar(aes(ymin=min, ymax=max), width=.2) +
-  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var),fill="white", fatten = 0)+
-  facet_wrap(~locus, nrow=loci/4)+
+  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var),fill="white")+
+  facet_wrap(~locus, nrow=loci/3)+
   scale_y_continuous(name="Observed heterozigosity")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
