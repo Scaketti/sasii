@@ -18,8 +18,8 @@ less_frq_allname = more_frq_allname = '';
 freqMin = 0;
 he_diff = ho_diff = list();
 n_size = 0;
+str_type = nLines = first_column_data = is_gbs = indef = header_line = separator = '';
 #----------------------------------------
-
 #----SUBROTINES--------------------------
 # Creates output file with results from script
 save_array_output <- function(lines, mid_name){
@@ -666,10 +666,10 @@ het_diff_push <- function(hash) {
 #----------------------------------------
 #----MAIN CODE---------------------------
 print("SaSii - Sample_Size Impact , 'R Beta version ', (2021)");
-print(paste("Running in:",os));
+print(paste("Running in:", os));
 
 if(file.exists("config")){
-    config = read_lines("config", n_max = 12);
+    config = readLines("config", n = 12);
 }else{
     config = NA;
 }
@@ -687,15 +687,46 @@ if(!is.na(config[1])){
     first_column_data = as.integer(strsplit(config[10], " ")[[1]][2]);
     is_gbs = as.integer(strsplit(config[11], " ")[[1]][2]);
     header_line = as.integer(strsplit(config[12], " ")[[1]][2]);
-}
-
-if(is.na(config[1])){
+}else{
     if(length(args) == 0){
         cat("Put your input file path: ");
         path = as.character(readLines("stdin", n=1));
     }else{
         path = args;
     }
+    
+    cat("Structure type (1 line or 2 lines data) [default = 1]: ");
+    str_type = as.character(readLines("stdin", n=1));
+    
+    cat("The file data is gbs? (1 or 0) [default = 0]: ");
+    is_gbs = as.character(readLines("stdin", n=1));
+    
+    cat("Indefined character [default = -9]: ");
+    if(is_gbs == 1) indef = as.character(readLines("stdin", n=1));
+
+    cat("Data begin at line [default = 1]: ");
+    first_line_data = as.character(readLines("stdin", n=1));
+    
+    cat("Choose multiple number of sample size (n) for resamples [default = 5]: ");
+    n_minimum = as.character(readLines("stdin", n=1));
+    
+    cat("Number of resampling for each N class [default = 50]: ");
+    repeat_N = as.character(readLines("stdin", n=1));
+    
+    cat("Minimal frequence of alleles to be preserved [default = 0.05]: ");
+    freqMin = as.character(readLines("stdin", n=1));
+    
+    cat("Csv file separator (as ASCII number) [default = 59 (;)]: ");
+    separator = as.character(readLines("stdin", n=1));
+    
+    cat("Number of lines to read [default = 50]: ");
+    nLines = as.character(readLines("stdin", n=1));
+    
+    cat("Number of the column which data is represented (according to header) [default = 1]: ");
+    first_column_data = as.character(readLines("stdin", n=1));
+    
+    cat("What is the header line number? (0, if not present) [default = 1]: ");
+    header_line = as.character(readLines("stdin", n=1));
 }
 
 if(path == "help" | path == "ajuda"){
@@ -710,6 +741,60 @@ if(path == "help" | path == "ajuda"){
             quit();
         }
     }
+}
+
+if(str_type == '') {
+    str_type = 1;
+    print("Using str_type = 1.");
+}else{
+    str_type = as.integer(str_type);
+    if(str_type != 1 && str_type != 2) {
+        print("Str_type must be 1 or 2.\n");
+        print("Try Again.");
+        quit();
+    }
+}
+
+if(nLines == '') {
+    nLines = 50;
+    print("Using number of lines = 50.");
+}else{
+    nLines = as.integer(nLines);
+}
+
+if(first_column_data == '') {
+    first_column_data = 1;
+    print("Using first column number = 1.");
+}else{
+    first_column_data = as.integer(first_column_data);
+}
+
+if(is_gbs == '') {
+    is_gbs = 0;
+    print("Defined data as gbs data = 0.");
+}else{
+    is_gbs = as.integer(is_gbs);
+}
+
+if(is_gbs == 1 && indef == '') {
+    indef = "-9";
+    print("Indefined allele setted as '-9'.");
+}else{
+    indef = as.character(indef);
+}
+
+if(header_line == '') {
+    header_line = 1;
+    print("Using number of lines = 50.");
+}else{
+    header_line = as.integer(header_line);
+}
+
+if(separator == '') {
+    separator = 59;
+    print(paste("Using csv separator:", intToUtf8(separator), " (59)."));
+}else{
+    separator = as.integer(separator);
 }
 
 #Check if results folder exists, if do, delete it.
@@ -738,15 +823,12 @@ if(!is.null(list.files(paste(pattern = ".dat")))){
 # make_path_files('12-He_diff', 12);
 
 # Defining the begining of data.---------------
-if(is.na(config[1])){
-    cat ("Data begin at line [default = 1]: ");
-    first_line_data = as.character(readLines("stdin", n=1));
-}
 
 if(first_line_data == '' | is.na(as.integer(first_line_data))){
     first_line_data = 1;
 }
-first_line_data = first_line_data - 1;
+
+first_line_data = as.integer(first_line_data) - 1;
 
 csv_data = "";
 
@@ -787,11 +869,6 @@ total_individuals = nrow(csv_data);
 
 print(paste("Your input data has", total_loci, "loci", "and", total_individuals, "individuals"));
 
-if(is.na(config[1])){
-    cat ("Choose multiple number of sample size (n) for resamples [default = 5]: ");
-    n_minimum = as.character(readLines("stdin", n=1));
-}
-
 if(n_minimum == '') {
     n_minimum = 5;
     print("Using N = 5.");
@@ -810,11 +887,6 @@ if(n_minimum == '') {
     }
 }
 
-if(is.na(config[1])){
-    cat ("Number of resampling for each N class [default = 50]: ");
-    repeat_N = as.character(readLines("stdin", n=1));
-}
-
 if(repeat_N == '') {
     repeat_N = 50;
     print("Using 50 repeats.");
@@ -824,12 +896,6 @@ if(repeat_N == '') {
         print("Number of repetitions can not exceed 10.000!!!");
         quit();
     }
-}
-
-#frequence below which alleles are regarded as rare 
-if(is.na(config[1])){
-    cat ("Minimal frequence of alleles to be preserved [default = 0.05]: "); 
-    freqMin = as.character(readLines("stdin", n=1));
 }
 
 if(freqMin == ''){
