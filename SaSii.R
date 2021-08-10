@@ -674,6 +674,7 @@ if(file.exists("config")){
     config = NA;
 }
 
+#Check if config file was read and set variables with input from file
 if(!is.na(config[1])){
     path = strsplit(config[1], " ")[[1]][2];
     str_type = as.integer(strsplit(config[2], " ")[[1]][2]);
@@ -687,46 +688,65 @@ if(!is.na(config[1])){
     first_column_data = as.integer(strsplit(config[10], " ")[[1]][2]);
     is_gbs = as.integer(strsplit(config[11], " ")[[1]][2]);
     header_line = as.integer(strsplit(config[12], " ")[[1]][2]);
-}else{
+}else{ #get parameters from user, checking if is interactive mode or not
     if(length(args) == 0){
         cat("Put your input file path: ");
-        path = as.character(readLines("stdin", n=1));
+        if(interactive()){
+            path = as.character(readline());
+        }else{
+            path = as.character(readLines("stdin", n=1));
+        }
     }else{
         path = args;
     }
     
-    cat("Structure type (1 line or 2 lines data) [default = 1]: ");
-    str_type = as.character(readLines("stdin", n=1));
-    
-    cat("The file data is gbs? (1 or 0) [default = 0]: ");
-    is_gbs = as.character(readLines("stdin", n=1));
-    
-    cat("Indefined character [default = -9]: ");
-    if(is_gbs == 1) indef = as.character(readLines("stdin", n=1));
-
-    cat("Data begin at line [default = 1]: ");
-    first_line_data = as.character(readLines("stdin", n=1));
-    
-    cat("Choose multiple number of sample size (n) for resamples [default = 5]: ");
-    n_minimum = as.character(readLines("stdin", n=1));
-    
-    cat("Number of resampling for each N class [default = 50]: ");
-    repeat_N = as.character(readLines("stdin", n=1));
-    
-    cat("Minimal frequence of alleles to be preserved [default = 0.05]: ");
-    freqMin = as.character(readLines("stdin", n=1));
-    
-    cat("Csv file separator (as ASCII number) [default = 59 (;)]: ");
-    separator = as.character(readLines("stdin", n=1));
-    
-    cat("Number of lines to read [default = 50]: ");
-    nLines = as.character(readLines("stdin", n=1));
-    
-    cat("Number of the column which data is represented (according to header) [default = 1]: ");
-    first_column_data = as.character(readLines("stdin", n=1));
-    
-    cat("What is the header line number? (0, if not present) [default = 1]: ");
-    header_line = as.character(readLines("stdin", n=1));
+    if(interactive()){
+        cat("Structure type (1 line or 2 lines data) [default = 1]: ");
+        str_type = as.character(readline());
+        cat("The file data is gbs? (1 or 0) [default = 0]: ");
+        is_gbs = as.character(readline());
+        cat("Indefined character [default = -9]: ");
+        if(is_gbs == 1) indef = as.character(readline());
+        cat("Data begin at line [default = 1]: ");
+        first_line_data = as.character(readline());
+        cat("Choose multiple number of sample size (n) for resamples [default = 5]: ");
+        n_minimum = as.character(readline());
+        cat("Number of resampling for each N class [default = 50]: ");
+        repeat_N = as.character(readline());
+        cat("Minimal frequence of alleles to be preserved [default = 0.05]: ");
+        freqMin = as.character(readline());
+        cat("Csv file separator (as ASCII number) [default = 59 (;)]: ");
+        separator = as.character(readline());
+        cat("Number of lines to read [default = 50]: ");
+        nLines = as.character(readline());
+        cat("Number of the column which data is represented (according to header) [default = 1]: ");
+        first_column_data = as.character(readline());
+        cat("What is the header line number? (0, if not present) [default = 1]: ");
+        header_line = as.character(readline());
+    }else{
+        cat("Structure type (1 line or 2 lines data) [default = 1]: ");
+        str_type = as.character(readLines("stdin", n=1));
+        cat("The file data is gbs? (1 or 0) [default = 0]: ");
+        is_gbs = as.character(readLines("stdin", n=1));
+        cat("Indefined character [default = -9]: ");
+        if(is_gbs == 1) indef = as.character(readLines("stdin", n=1));
+        cat("Data begin at line [default = 1]: ");
+        first_line_data = as.character(readLines("stdin", n=1));
+        cat("Choose multiple number of sample size (n) for resamples [default = 5]: ");
+        n_minimum = as.character(readLines("stdin", n=1));
+        cat("Number of resampling for each N class [default = 50]: ");
+        repeat_N = as.character(readLines("stdin", n=1));
+        cat("Minimal frequence of alleles to be preserved [default = 0.05]: ");
+        freqMin = as.character(readLines("stdin", n=1));
+        cat("Csv file separator (as ASCII number) [default = 59 (;)]: ");
+        separator = as.character(readLines("stdin", n=1));
+        cat("Number of lines to read [default = 50]: ");
+        nLines = as.character(readLines("stdin", n=1));
+        cat("Number of the column which data is represented (according to header) [default = 1]: ");
+        first_column_data = as.character(readLines("stdin", n=1));
+        cat("What is the header line number? (0, if not present) [default = 1]: ");
+        header_line = as.character(readLines("stdin", n=1));
+    }
 }
 
 if(path == "help" | path == "ajuda"){
@@ -913,7 +933,11 @@ if(freqMin == ''){
 print(paste("Using", freqMin, "as minimal frequence."));
 
 cat ("Press enter to continue\n"); 
-readLines("stdin", n=1);
+if(interactive()){
+    readline();
+}else{
+    readLines("stdin", n=1);
+}
 
 if(os == "Linux" || os == "Darwin") {
     system("clear");
@@ -940,7 +964,11 @@ print(paste("Resample per N:", repeat_N));
 print(paste("Alleles rares: bellow", freqMin));
 
 cat ("Press enter to continue\n"); 
-readLines("stdin", n=1);
+if(interactive()){
+    readline();
+}else{
+    readLines("stdin", n=1);
+}
 
 allelic_richness(allele_numbers);
 
