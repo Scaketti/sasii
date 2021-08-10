@@ -1196,7 +1196,6 @@ while(n_size <= total_individuals) {
         plot_graphs();
         print("Ploting graphs...");
         print("Finish !");
-        quit();
     }else {
         if (n_size >= total_individuals){
             n_size = total_individuals;
