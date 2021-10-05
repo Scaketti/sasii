@@ -1,6 +1,6 @@
 #define data directory
+old_wd = getwd()
 setwd("./results")
-
 
 if (!require(tidyr)) install.packages('tidyr')
 if (!require(ggplot2)) install.packages('ggplot2')
@@ -248,3 +248,4 @@ ggsave("12-He_diff.png", width= 6, heigh=4, units="in", dpi=300)
 files <- list.files(pattern="*.txt")
 newfiles <- gsub(".txt", ".sso", files)
 file.rename(files, newfiles)
+setwd(old_wd)
