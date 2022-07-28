@@ -1,6 +1,6 @@
 #define data directory
-old_wd = getwd()
 setwd("./results")
+
 
 if (!require(tidyr)) install.packages('tidyr')
 if (!require(ggplot2)) install.packages('ggplot2')
@@ -31,16 +31,9 @@ df <- read.table("1-5percent_rate.txt", skip=3)
 colnames(df) <- c("n", "locus", "var", "sd")
 
 #plot the graphic and save as vector
-p <- ggplot(df, aes(n, var, group=locus))+
-  geom_point(stat="identity")+
-  geom_line(stat="identity")+  
-  geom_errorbar(aes(ymin=var-sd, ymax=var+sd), width=.2) +
-  scale_y_continuous(name="Fraction of common alleles detected")+
-  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
-  theme_classic()
-
 p <- ggplot(df, aes(x=n, y=var,group=n)) + 
   geom_boxplot()+
+  geom_hline(yintercept=0.95, linetype="dashed", color = "red")+
   scale_y_continuous(name="Fraction of common alleles detected")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
@@ -58,16 +51,9 @@ df <- separate(data = df, col = locus, into = c("locus", "allele"))
 df2 <- data_summary(df, varname="diff", groupnames=c("n", "locus"))
 
 #plot the graphic and save as vector
-p <- ggplot(df2, aes(n, diff, group=locus))+
-  geom_point(stat="identity")+
-  geom_line(stat="identity")+  
-  geom_errorbar(aes(ymin=diff-sd, ymax=diff+sd), width=.2) +
-  scale_y_continuous(name="Mean difference from real allele frequency")+
-  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
-  theme_classic()
-
 p <- ggplot(df, aes(x=n, y=diff,group=n)) + 
   geom_boxplot()+
+  geom_hline(yintercept=0.01, linetype="dashed", color = "red")+
   scale_y_continuous(name="Mean difference from real allele frequency")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
@@ -130,6 +116,7 @@ colnames(df) <- c("n", "var", "sd")
 p <- ggplot(df, aes(n, var))+
   geom_point(stat="identity")+
   geom_line(stat="identity")+  
+  geom_hline(yintercept=0.05, linetype="dashed", color = "red")+
   geom_errorbar(aes(ymin=var-sd, ymax=var+sd), width=.2) +
   scale_y_continuous(name="Mean pairwise Fst")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
@@ -137,7 +124,7 @@ p <- ggplot(df, aes(n, var))+
 
 ggsave("6-Fst.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 6. Impact pf sample size on mean Nei's genetic distance between samples and the true population
+#Fig 7. Impact pf sample size on mean Nei's genetic distance between samples and the true population
 df <- read.table("7-Nei.txt")
 colnames(df) <- c("n", "var", "sd")
 
@@ -169,8 +156,6 @@ ggsave("8-Roger.png", width= 6, heigh=4, units="in", dpi=300)
 
 #Fig 9. Imapct of sample size on the accuracy and precision of multiloci mean observed heterozigosity
 ####
-# Trocar He por Ho, rever col names (sd, min, max)
-#####
 #import and adjust data frame
 df <- read.table("9-meanHo_impact.txt")
 colnames(df) <- c("n", "var", "sd", "min", "max")
@@ -208,15 +193,9 @@ df <- read.table("11-Ho_diff.txt", skip=3)
 colnames(df) <- c("n", "locus", "diff")
 
 #plot the graphic and save as vector
-p <- ggplot(df, aes(n, diff, group=locus))+
-  geom_point(stat="identity")+
-  geom_line(stat="identity")+  
-  scale_y_continuous(name="Mean allele frequency")+
-  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
-  theme_classic()
-
 p <- ggplot(df, aes(x=n, y=diff,group=n)) + 
   geom_boxplot()+
+  geom_hline(yintercept=0.05, linetype="dashed", color = "red")+
   scale_y_continuous(name="Mean difference from real Ho")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
@@ -229,15 +208,9 @@ df <- read.table("12-He_diff.txt", skip=3)
 colnames(df) <- c("n", "locus", "diff")
 
 #plot the graphic and save as vector
-p <- ggplot(df, aes(n, diff, group=locus))+
-  geom_point(stat="identity")+
-  geom_line(stat="identity")+  
-  scale_y_continuous(name="Mean difference from real He")+
-  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
-  theme_classic()
-
 p <- ggplot(df, aes(x=n, y=diff,group=n)) + 
   geom_boxplot()+
+  geom_hline(yintercept=0.05, linetype="dashed", color = "red")+
   scale_y_continuous(name="Mean difference from real He")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
@@ -248,4 +221,3 @@ ggsave("12-He_diff.png", width= 6, heigh=4, units="in", dpi=300)
 files <- list.files(pattern="*.txt")
 newfiles <- gsub(".txt", ".sso", files)
 file.rename(files, newfiles)
-setwd(old_wd)
