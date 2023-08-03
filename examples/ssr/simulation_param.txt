@@ -1,0 +1,79 @@
+--------------------------------------------------------------------------------
+EASYPOP (v. 2.0.1)
+Author: F. Balloux
+Available at: http://www.unil.ch/izea/softwares/easypop.html
+--------------------------------------------------------------------------------
+
+Ploidy level ? (0=haplo-diploid; 1=haploid; 2=diploid)
+2
+Two sexes?:y/n
+y
+Mating system?
+1= Random mating
+2= Polygyny
+3= Monogyny
+1
+Number of populations ?
+10
+Same number of individuals in each population ?:y/n
+y
+Number of females in each population ?
+50
+Number of males in each population?
+50
+Same migration scheme over all simulation? (y/n)
+y
+migration model?
+1 = 1-dimension stepping stone;
+2 = 2-dimension stepping stone (only with a square
+    number of populations, e.g. 9, 16,..144..);
+3 = island model;
+4 = hierarchical stepping stone ('contact zone');
+5 = hierarchical island ;
+6 = spatial models;
+3
+proportion of female migration?(between 0 and 1)
+0.05
+proportion of male migration?(between 0 and 1)
+0.05
+Number of loci ?
+10
+Free recombination between loci?:y/n
+y
+Do all loci have the same mutation scheme?:y/n
+y
+Mutation rate ?(between 0 and 1, e.g. 0.0001) 
+0.0001
+Mutation model
+1= Kam,(same probability to mutate to any allelic state)
+2= Ssm, (single step mutation model)
+3= Mixed model of Ssm with a proportion of Kam mutation events)
+4= Mixed model of Ssm with a proportion of double step mutation events)
+4
+Proportion of double step mutation events
+0.005
+Number of possible allelic states ?(below 1000) 
+20
+Variability of the initial population
+1= Maximal, (randomly assigned alleles)
+2= Minimal, (all individuals start with the same allele)
+1
+Number of generations ?
+3000
+Do you want the complete dataset in the '.dat' and '.gen' result files ?:y/n
+y
+Do you want a file giving the complete pedigree of the simulation ?:y/n
+(Please notice that this file can be very huge and will slow down simulations)
+n
+Name of the file?
+ssr_3000
+Number of replicates? (between 1 and 999)
+1
+
+
+replicate:  1
+
+  3000  2900  2800  2700  2600  2500  2400  2300  2200  2100
+  2000  1900  1800  1700  1600  1500  1400  1300  1200  1100
+  1000   900   800   700   600   500   400   300   200   100
+finished

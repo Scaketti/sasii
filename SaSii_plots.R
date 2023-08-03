@@ -24,8 +24,6 @@ file.rename(files, newfiles)
 
 #Fig 1. Fraction of common alleles (freq > 5%) detected
 ####
-# Q? O que é ML?
-####
 #import and adjust data frame
 df <- read.table("1-5percent_rate.txt", skip=3)
 colnames(df) <- c("n", "locus", "var", "sd")
@@ -87,7 +85,7 @@ loci <- nlevels(factor(df$locus))
 p <- ggplot(df, aes(n, var, group=locus))+
   geom_errorbar(aes(ymin=min, ymax=max), width=.2) +
   geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var), fill="white")+
-  facet_wrap(~locus, nrow=loci/3)+
+  facet_wrap(~locus, nrow=round(loci/3))+
   scale_y_continuous(name="Expected heterozigosity")+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
@@ -108,8 +106,72 @@ p <- ggplot(df, aes(n, var))+
 
 ggsave("5-meanHe_impact.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 6. Impact pf sample size on mean Fst between samples and the true population
-df <- read.table("6-Fst.txt")
+#Fig 6. Impact of sample size on the accuracy and precision of observed heterosigosity
+#import and adjust data frame
+df <- read.table("6-Ho_impact.txt", skip=3)
+colnames(df) <- c("n", "locus", "var", "sd", "min", "max")
+
+loci <- nlevels(factor(df$locus))
+#plot the graphic and save as vector
+p <- ggplot(df, aes(n, var, group=locus))+
+  geom_errorbar(aes(ymin=min, ymax=max), width=.2) +
+  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var),fill="white")+
+  facet_wrap(~locus, nrow=round(loci/3))+
+  scale_y_continuous(name="Observed heterozigosity")+
+  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
+  theme_classic()
+
+ggsave("6-Ho_impact.png", width= 6, heigh=4, units="in", dpi=300)
+
+#Fig 7. Imapct of sample size on the accuracy and precision of multiloci mean observed heterozigosity
+####
+#import and adjust data frame
+df <- read.table("7-meanHo_impact.txt")
+colnames(df) <- c("n", "var", "sd", "min", "max")
+
+#plot the graphic and save as vector
+p <- ggplot(df, aes(n, var))+
+  geom_errorbar(aes(ymin=min, ymax=max), width=.2) +
+  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var),fill= "white")+
+  scale_y_continuous(name="Mean observed heterozigosity")+
+  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
+  theme_classic()
+
+ggsave("7-meanHo_impact.png", width= 6, heigh=4, units="in", dpi=300)
+
+
+#Fig 8. Impact of sample size on the accuracy of mean Ho
+#import and adjust data frame
+df <- read.table("8-Ho_diff.txt", skip=3)
+colnames(df) <- c("n", "locus", "diff")
+
+#plot the graphic and save as vector
+p <- ggplot(df, aes(x=n, y=diff,group=n)) + 
+  geom_boxplot()+
+  geom_hline(yintercept=0.05, linetype="dashed", color = "red")+
+  scale_y_continuous(name="Mean difference from real Ho")+
+  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
+  theme_classic()
+
+ggsave("8-Ho_diff.png", width= 6, heigh=4, units="in", dpi=300)
+
+#Fig 9. Impact of sample size on the accuracy of mean He
+#import and adjust data frame
+df <- read.table("9-He_diff.txt", skip=3)
+colnames(df) <- c("n", "locus", "diff")
+
+#plot the graphic and save as vector
+p <- ggplot(df, aes(x=n, y=diff,group=n)) + 
+  geom_boxplot()+
+  geom_hline(yintercept=0.05, linetype="dashed", color = "red")+
+  scale_y_continuous(name="Mean difference from real He")+
+  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
+  theme_classic()
+
+ggsave("9-He_diff.png", width= 6, heigh=4, units="in", dpi=300)
+
+#Fig 10. Impact pf sample size on mean Fst between samples and the true population
+df <- read.table("10-Fst.txt")
 colnames(df) <- c("n", "var", "sd")
 
 #plot the graphic and save as vector
@@ -122,10 +184,10 @@ p <- ggplot(df, aes(n, var))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("6-Fst.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("10-Fst.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 7. Impact pf sample size on mean Nei's genetic distance between samples and the true population
-df <- read.table("7-Nei.txt")
+#Fig 11. Impact pf sample size on mean Nei's genetic distance between samples and the true population
+df <- read.table("11-Nei.txt")
 colnames(df) <- c("n", "var", "sd")
 
 #plot the graphic and save as vector
@@ -137,10 +199,10 @@ p <- ggplot(df, aes(n, var))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("7-Nei.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("11-Nei.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 8. Impact pf sample size on mean Roger's genetic distance between samples and the true population
-df <- read.table("8-Roger.txt")
+#Fig 12. Impact pf sample size on mean Roger's genetic distance between samples and the true population
+df <- read.table("12-Roger.txt")
 colnames(df) <- c("n", "var", "sd")
 
 #plot the graphic and save as vector
@@ -152,70 +214,7 @@ p <- ggplot(df, aes(n, var))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("8-Roger.png", width= 6, heigh=4, units="in", dpi=300)
-
-#Fig 9. Imapct of sample size on the accuracy and precision of multiloci mean observed heterozigosity
-####
-#import and adjust data frame
-df <- read.table("9-meanHo_impact.txt")
-colnames(df) <- c("n", "var", "sd", "min", "max")
-
-#plot the graphic and save as vector
-p <- ggplot(df, aes(n, var))+
-  geom_errorbar(aes(ymin=min, ymax=max), width=.2) +
-  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var),fill= "white")+
-  scale_y_continuous(name="Mean observed heterozigosity")+
-  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
-  theme_classic()
-
-ggsave("9-Ho_impact.png", width= 6, heigh=4, units="in", dpi=300)
-
-#Fig 10. Impact of sample size on the accuracy and precision of observed heterosigosity
-#import and adjust data frame
-df <- read.table("10-Ho_impact.txt", skip=3)
-colnames(df) <- c("n", "locus", "var", "sd", "min", "max")
-
-loci <- nlevels(factor(df$locus))
-#plot the graphic and save as vector
-p <- ggplot(df, aes(n, var, group=locus))+
-  geom_errorbar(aes(ymin=min, ymax=max), width=.2) +
-  geom_crossbar(aes(ymin = var-sd, ymax = var+sd, x = n, y = var),fill="white")+
-  facet_wrap(~locus, nrow=loci/3)+
-  scale_y_continuous(name="Observed heterozigosity")+
-  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
-  theme_classic()
-
-ggsave("10-Ho_impact.png", width= 6, heigh=4, units="in", dpi=300)
-
-#Fig 11. Impact of sample size on the accuracy of mean Ho
-#import and adjust data frame
-df <- read.table("11-Ho_diff.txt", skip=3)
-colnames(df) <- c("n", "locus", "diff")
-
-#plot the graphic and save as vector
-p <- ggplot(df, aes(x=n, y=diff,group=n)) + 
-  geom_boxplot()+
-  geom_hline(yintercept=0.05, linetype="dashed", color = "red")+
-  scale_y_continuous(name="Mean difference from real Ho")+
-  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
-  theme_classic()
-
-ggsave("11-Ho_diff.png", width= 6, heigh=4, units="in", dpi=300)
-
-#Fig 12. Impact of sample size on the accuracy of mean He
-#import and adjust data frame
-df <- read.table("12-He_diff.txt", skip=3)
-colnames(df) <- c("n", "locus", "diff")
-
-#plot the graphic and save as vector
-p <- ggplot(df, aes(x=n, y=diff,group=n)) + 
-  geom_boxplot()+
-  geom_hline(yintercept=0.05, linetype="dashed", color = "red")+
-  scale_y_continuous(name="Mean difference from real He")+
-  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
-  theme_classic()
-
-ggsave("12-He_diff.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("12-Roger.png", width= 6, heigh=4, units="in", dpi=300)
 
 #Change file extension
 files <- list.files(pattern="*.txt")

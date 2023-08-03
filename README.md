@@ -1,7 +1,8 @@
 # SaSii v1.0
 
-## Sample Size Impact 'R Alpha version ' (2021)
+## Sample Size Impact 'R version' (2021)
 
-Software desenvolvido para determinar o tamanho amostral mínimo para representar as frequências alélicas e genotípicas de populações naturais
+Software developed to determine the minimum sample size to represent the allelic and genotypic frequencies of natural populations.
 
-Ref Tese de Doutorado - Kaiser Dias Schwarcz: http://repositorio.unicamp.br/handle/REPOSIP/317091
+Software upgrade from PhD thesis - Kaiser Dias Schwarcz: http://repositorio.unicamp.br/handle/REPOSIP/317091
+Documentation - https://sasii.readthedocs.io/en/latest/

@@ -1,7 +1,6 @@
 #-------REQUESTS-------------------------
 #if (!require(Rcpp)) install.packages('Rcpp')
 if (!require(readr)) install.packages('readr')
-#if (!require(microbenchmark)) install.packages('microbenchmark')
 #----------------------------------------
 # ------SOME GLOBAL VARIABLES------------
 args <- commandArgs(trailingOnly = TRUE);
@@ -843,19 +842,6 @@ if(!is.null(list.files(paste(pattern = ".dat")))){
     unlink(paste0("fig","*",".dat"));
 }
 
-# make_path_files('1-5percent_rate', 1);
-# make_path_files('2-freq_dif', 2);
-# make_path_files('3-freq_impact', 3);
-# make_path_files('4-He_impact', 4);
-# make_path_files('5-meanHe_impact', 5);
-# make_path_files('6-Fst', 6);
-# make_path_files('7-Nei', 7);
-# make_path_files('8-Roger', 8);
-# make_path_files('9-meanHo_impact', 9);
-# make_path_files('10-Ho_impact', 10);
-# make_path_files('11-Ho_diff', 11);
-# make_path_files('12-He_diff', 12);
-
 # Defining the begining of data.---------------
 
 if(first_line_data == '' | is.na(as.integer(first_line_data))){
@@ -1190,14 +1176,14 @@ while(n_size <= total_individuals && n_size <= max_indv_pop) {
     save_array_output(global_freq_diffs, '2-freq_dif');
     save_array_output(global_less_more_data, '3-freq_impact');
     save_array_output(he_data, '4-He_impact');
-    save_array_output(ho_data, '10-Ho_impact');
-    save_array_output(he_diff_final, '12-He_diff');
     save_array_output(he_mean_final, '5-meanHe_impact');
-    save_array_output(ho_mean_final, '9-meanHo_impact');
-    save_array_output(ho_diff_final, '11-Ho_diff');
-    save_array_output(fst_table, '6-Fst');
-    save_array_output(neiD_table, '7-Nei');
-    save_array_output(rogersD_table, '8-Roger');
+    save_array_output(ho_data, '6-Ho_impact');
+    save_array_output(ho_mean_final, '7-meanHo_impact');
+    save_array_output(ho_diff_final, '8-Ho_diff');
+    save_array_output(he_diff_final, '9-He_diff');
+    save_array_output(fst_table, '10-Fst');
+    save_array_output(neiD_table, '11-Nei');
+    save_array_output(rogersD_table, '12-Roger');
     
     #-----RESULTS SAVED---------------------#
     
@@ -1220,6 +1206,8 @@ while(n_size <= total_individuals && n_size <= max_indv_pop) {
     }
     #----------------------------------------------------------------
 }
+work_dir = getwd()
 plot_graphs();
+setwd(work_dir)
 print("Ploting graphs...");
 print("Finish !");
