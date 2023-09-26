@@ -592,9 +592,72 @@ freq_5 <- function(freq_hash) {
     return(list(five_percent_hash, five_percent_n)); #returning hash as reference 
 }
 #----------------------------------------
-count_freq_5_sample <- function(freq_hash, sample_local) {
-    reference_hash = orig_five_percent;
-    local_ref_count = five_percent_n;
+freq <- function(freq_hash) {
+  hash = array(rep(array(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1));
+  names(hash) <- names(orig_allele_numbers); # HoH to save alleles with freq higher than freqMin
+  n = 0;
+  
+  sorted_freq_hash = sort(names(hash));
+  
+  for(locus in sorted_freq_hash) {
+    if(length(freq_hash[[locus]]) > 0 ){
+      sorted_locus = sort(names(freq_hash[[locus]]));
+      
+      for(key in sorted_locus){
+          if(is.na(hash[[locus]])){
+            hash[[locus]] = c(key);
+          }else{
+            hash[[locus]] = list(c(unlist(hash[[locus]]), key));
+          }
+          n = n + 1; #writes in local variable with same name as global one
+      }
+    }else{
+      hash = hash[names(hash) != locus];
+    }
+  }
+  return(list(hash, n)); #returning hash as reference 
+}
+#----------------------------------------
+freq_rare <- function(freq_hash) {
+  hash = array(rep(array(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1));
+  names(hash) <- names(orig_allele_numbers); # HoH to save alleles with freq higher than freqMin
+  n = 0;
+  
+  sorted_freq_hash = sort(names(hash));
+  
+  for(locus in sorted_freq_hash) {
+    if(length(freq_hash[[locus]]) > 0 ){
+      sorted_locus = sort(names(freq_hash[[locus]]));
+      
+      for(key in sorted_locus){
+        if(as.numeric(freq_hash[[locus]][key]) < freqMin){
+          if(is.na(hash[[locus]])){
+            hash[[locus]] = c(key);
+          }else{
+            hash[[locus]] = list(c(unlist(hash[[locus]]), key));
+          }
+          n = n + 1; #writes in local variable with same name as global one
+        }
+      }
+    }else{
+      hash = hash[names(hash) != locus];
+    }
+  }
+  return(list(hash, n)); #returning hash as reference 
+}
+#----------------------------------------
+count_freq_sample <- function(freq_hash, sample_local, type) {
+    if(type == "five_percent"){
+      reference_hash = orig_five_percent;
+      local_ref_count = five_percent_n;
+    }else if(type == "all_percent"){
+      reference_hash = orig_percent;
+      local_ref_count = n;
+    }else{
+      reference_hash = orig_percent_rare;
+      local_ref_count = n_rare;
+    }
+    
     general_local_count = 0;
     local_array = array();
     sorted_freq_hash = sort(names(freq_hash));
@@ -988,8 +1051,24 @@ orig_five_percent_ref = aux_array[[1]]; five_percent_n = aux_array[[2]];
 
 orig_five_percent = orig_five_percent_ref;
 
+aux_array = freq(orig_allele_freq);
+orig_ref = aux_array[[1]]; n = aux_array[[2]];
+
+orig_percent = orig_ref;
+
+aux_array = freq_rare(orig_allele_freq);
+orig_ref_rare = aux_array[[1]]; n_rare = aux_array[[2]];
+
+orig_percent_rare = orig_ref_rare;
+
 samples_five_percent = array(rep(list(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1));
 names(samples_five_percent) <- names(orig_allele_numbers);
+
+samples = array(rep(list(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1));
+names(samples) <- names(orig_allele_numbers);
+
+samples_rare = array(rep(list(), length(orig_allele_numbers)), c(length(orig_allele_numbers), 1));
+names(samples_rare) <- names(orig_allele_numbers);
 
 freq_arrays_complete = list();
 
@@ -1046,6 +1125,13 @@ global_less_more_data <- append(global_less_more_data, paste0(total_individuals,
 global_fiverpercent_rate = vector();
 global_fiverpercent_rate <- append(global_fiverpercent_rate, paste0(total_individuals,"\n",total_loci+1,"\n",n_minimum));
 
+global_rate = vector();
+global_rate <- append(global_rate, paste0(total_individuals,"\n",total_loci+1,"\n",n_minimum));
+
+global_rate_rare = vector();
+global_rate_rare <- append(global_rate_rare, paste0(total_individuals,"\n",total_loci+1,"\n",n_minimum));
+
+
 nei_fst = weir_theta = 0;
 fst_array = vector(); # Fst values for resamples in a same N classes
 fst_table = vector(); # Fst & SD for all N classes
@@ -1065,6 +1151,13 @@ while(n_size <= total_individuals && n_size <= max_indv_pop) {
     
     five_percent_sample_count = ""; # string with number of presence of 5% freq alleles for each resample
     nClass_fiverpercent_count = vector(); #array to keep number of alleles w/ original freq >= 0.05
+    
+    sample_count = ""; 
+    nClass_count = vector(); 
+    
+    sample_count_rare = ""; 
+    nClass_count_rare = vector(); 
+    
     #that are also present in each resemple for this N class
     
     sorted_orig_allele_freq = sort(names(orig_allele_freq));
@@ -1098,21 +1191,52 @@ while(n_size <= total_individuals && n_size <= max_indv_pop) {
         
         fst_array <- append(fst_array, nei_fst);
         samples_five_ref = 0;
+        samples_ref = 0;
+        samples_ref_rare = 0;
         
-        aux_array = count_freq_5_sample(allele_freq, samples_five_percent);
+        #five percent
+        aux_array = count_freq_sample(allele_freq, samples_five_percent, "five_percent");
         five_percent_sample_count = aux_array[[1]]; samples_five_ref = aux_array[[2]];
-        
         nClass_fiverpercent_count <- append(nClass_fiverpercent_count, five_percent_sample_count);
         samples_five_percent = samples_five_ref;
+        
+        #all
+        aux_array = count_freq_sample(allele_freq, samples, "all_percent");
+        sample_count = aux_array[[1]]; samples_ref = aux_array[[2]];
+        nClass_count <- append(nClass_count, sample_count);
+        samples = samples_ref;
+        
+        #rare
+        aux_array = count_freq_sample(allele_freq, samples_rare, "rare_percent");
+        sample_count_rare = aux_array[[1]]; samples_ref_rare = aux_array[[2]];
+        nClass_count_rare <- append(nClass_count_rare, sample_count_rare);
+        samples_rare = samples_ref_rare;
         
         repeats = repeats - 1;
     }
     #quit();
+    #five percent
     nClass_fiverpercent_mean = sprintf("%.5f", mean(nClass_fiverpercent_count));
     nClass_fiverpercent_sd = sprintf("%.5f", sd(nClass_fiverpercent_count));
     
+    #all
+    nClass_mean = sprintf("%.5f", mean(nClass_count));
+    nClass_sd = sprintf("%.5f", sd(nClass_count));
+    
+    #rare
+    nClass_mean_rare = sprintf("%.5f", mean(nClass_count_rare));
+    nClass_sd_rare = sprintf("%.5f", sd(nClass_count_rare));
+    
+    #five percent
     global_fiverpercent_rate <- append(global_fiverpercent_rate, paste0(n_size, "\t", "ML", "\t", nClass_fiverpercent_mean, "\t", nClass_fiverpercent_sd));
     
+    #all
+    global_rate <- append(global_rate, paste0(n_size, "\t", "ML", "\t", nClass_mean, "\t", nClass_sd));
+    
+    #rare
+    global_rate_rare <- append(global_rate_rare, paste0(n_size, "\t", "ML", "\t", nClass_mean_rare, "\t", nClass_sd_rare));
+    
+    #five percent
     sorted_samples = sort(names(samples_five_percent));
     a = lapply(sorted_samples, function(locus){
         nClass_fiverpercent_mean = sprintf("%.5f", mean(samples_five_percent[[locus]]));
@@ -1120,6 +1244,26 @@ while(n_size <= total_individuals && n_size <= max_indv_pop) {
         
         global_fiverpercent_rate <<- append(global_fiverpercent_rate, paste0(n_size, "\t", locus, "\t", nClass_fiverpercent_mean, "\t", nClass_fiverpercent_sd));
         samples_five_percent[[locus]] <<- vector(); # Clean \%SAMPLES_five_percent values for use in next N class
+    });
+    
+    #all
+    sorted_samples = sort(names(samples));
+    a = lapply(sorted_samples, function(locus){
+      nClass_mean = sprintf("%.5f", mean(samples[[locus]]));
+      nClass_sd = sprintf("%.5f", sd(samples[[locus]]));
+      
+      global_rate <<- append(global_rate, paste0(n_size, "\t", locus, "\t", nClass_mean, "\t", nClass_sd));
+      samples[[locus]] <<- vector(); # Clean \%SAMPLES values for use in next N class
+    });
+    
+    #rare
+    sorted_samples = sort(names(samples));
+    a = lapply(sorted_samples, function(locus){
+      nClass_mean_rare = sprintf("%.5f", mean(samples_rare[[locus]]));
+      nClass_sd_rare = sprintf("%.5f", sd(samples_rare[[locus]]));
+      
+      global_rate_rare <<- append(global_rate_rare, paste0(n_size, "\t", locus, "\t", nClass_mean_rare, "\t", nClass_sd_rare));
+      samples_rare[[locus]] <<- vector(); # Clean \%SAMPLES values for use in next N class
     });
     
     local_freq_diffs = freq_diff_calc(mean_allele_freq);
@@ -1173,17 +1317,19 @@ while(n_size <= total_individuals && n_size <= max_indv_pop) {
     print("Printing results into output files...");
     #----SAVING some RESULTS TO OUTPUT FILES-----#
     save_array_output(global_fiverpercent_rate, '1-5percent_rate');
-    save_array_output(global_freq_diffs, '2-freq_dif');
-    save_array_output(global_less_more_data, '3-freq_impact');
-    save_array_output(he_data, '4-He_impact');
-    save_array_output(he_mean_final, '5-meanHe_impact');
-    save_array_output(ho_data, '6-Ho_impact');
-    save_array_output(ho_mean_final, '7-meanHo_impact');
-    save_array_output(ho_diff_final, '8-Ho_diff');
-    save_array_output(he_diff_final, '9-He_diff');
-    save_array_output(fst_table, '10-Fst');
-    save_array_output(neiD_table, '11-Nei');
-    save_array_output(rogersD_table, '12-Roger');
+    save_array_output(global_rate, '2-all_percent_rate');
+    save_array_output(global_rate_rare, '3-rare_percent_rate');
+    save_array_output(global_freq_diffs, '4-freq_dif');
+    save_array_output(global_less_more_data, '5-freq_impact');
+    save_array_output(he_data, '6-He_impact');
+    save_array_output(he_mean_final, '7-meanHe_impact');
+    save_array_output(ho_data, '8-Ho_impact');
+    save_array_output(ho_mean_final, '9-meanHo_impact');
+    save_array_output(ho_diff_final, '10-Ho_diff');
+    save_array_output(he_diff_final, '11-He_diff');
+    save_array_output(fst_table, '12-Fst');
+    save_array_output(neiD_table, '13-Nei');
+    save_array_output(rogersD_table, '14-Roger');
     
     #-----RESULTS SAVED---------------------#
     

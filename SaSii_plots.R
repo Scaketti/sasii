@@ -38,10 +38,41 @@ p <- ggplot(df, aes(x=n, y=var,group=n)) +
 
 ggsave("1-5percent_rate.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 2. Impact of sample size on the accuracy of mean sample allele frequency
+#Fig . Fraction of common alleles (freq > 5%) detected
+####
+#import and adjust data frame
+df <- read.table("2-all_percent_rate.txt", skip=3)
+colnames(df) <- c("n", "locus", "var", "sd")
+
+#plot the graphic and save as vector
+p <- ggplot(df, aes(x=n, y=var,group=n)) + 
+  geom_boxplot()+
+  scale_y_continuous(name="Fraction of all alleles detected")+
+  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
+  theme_classic()
+
+ggsave("2-all_percent_rate.png", width= 6, heigh=4, units="in", dpi=300)
+
+#Fig 3. Fraction of common alleles (freq > 5%) detected
+####
+#import and adjust data frame
+df <- read.table("3-rare_percent_rate.txt", skip=3)
+colnames(df) <- c("n", "locus", "var", "sd")
+
+#plot the graphic and save as vector
+p <- ggplot(df, aes(x=n, y=var,group=n)) + 
+  geom_boxplot()+
+  scale_y_continuous(name="Fraction of rare alleles detected")+
+  scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
+  theme_classic()
+
+ggsave("3-rare_percent_rate.png", width= 6, heigh=4, units="in", dpi=300)
+
+
+#Fig 4. Impact of sample size on the accuracy of mean sample allele frequency
 
 #import and adjust data frame
-df <- read.table("2-freq_dif.txt", skip=3)
+df <- read.table("4-freq_dif.txt", skip=3)
 colnames(df) <- c("n", "locus", "diff")
 df <- separate(data = df, col = locus, into = c("locus", "allele"))
 
@@ -56,11 +87,11 @@ p <- ggplot(df, aes(x=n, y=diff,group=n)) +
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("2-freq_dif.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("4-freq_dif.png", width= 6, heigh=4, units="in", dpi=300)
 
 
-#Fig 3. Impact of sample size on the precision of sample allele frequencies (most common and most rare alleles)
-df <- read.table("3-freq_impact.txt", skip=3)
+#Fig 5. Impact of sample size on the precision of sample allele frequencies (most common and most rare alleles)
+df <- read.table("5-freq_impact.txt", skip=3)
 colnames(df) <- c("n", "locus", "var", "sd", "min", "max")
 df <- separate(data = df, col = locus, into = c("freq", "allele"), sep=8)
 
@@ -73,11 +104,11 @@ p <- ggplot(df, aes(n, var, group=allele, color=allele))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("3-freq_impact.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("5-freq_impact.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 4. Impact of sample size on the accuracy and precision of expected heterosigosity
+#Fig 6. Impact of sample size on the accuracy and precision of expected heterosigosity
 #import and adjust data frame
-df <- read.table("4-He_impact.txt", skip=3)
+df <- read.table("6-He_impact.txt", skip=3)
 colnames(df) <- c("n", "locus", "var", "sd", "min", "max")
 
 loci <- nlevels(factor(df$locus))
@@ -90,10 +121,10 @@ p <- ggplot(df, aes(n, var, group=locus))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("4-He_impact.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("6-He_impact.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 5. Impact of sample size on the accuracy and precision of multiloci mean expected heterozigosity
-df <- read.table("5-meanHe_impact.txt")
+#Fig 7. Impact of sample size on the accuracy and precision of multiloci mean expected heterozigosity
+df <- read.table("7-meanHe_impact.txt")
 colnames(df) <- c("n", "var", "sd", "min", "max")
 
 #plot the graphic and save as vector
@@ -104,11 +135,11 @@ p <- ggplot(df, aes(n, var))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("5-meanHe_impact.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("7-meanHe_impact.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 6. Impact of sample size on the accuracy and precision of observed heterosigosity
+#Fig 8. Impact of sample size on the accuracy and precision of observed heterosigosity
 #import and adjust data frame
-df <- read.table("6-Ho_impact.txt", skip=3)
+df <- read.table("8-Ho_impact.txt", skip=3)
 colnames(df) <- c("n", "locus", "var", "sd", "min", "max")
 
 loci <- nlevels(factor(df$locus))
@@ -121,12 +152,12 @@ p <- ggplot(df, aes(n, var, group=locus))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("6-Ho_impact.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("8-Ho_impact.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 7. Imapct of sample size on the accuracy and precision of multiloci mean observed heterozigosity
+#Fig 9. Imapct of sample size on the accuracy and precision of multiloci mean observed heterozigosity
 ####
 #import and adjust data frame
-df <- read.table("7-meanHo_impact.txt")
+df <- read.table("9-meanHo_impact.txt")
 colnames(df) <- c("n", "var", "sd", "min", "max")
 
 #plot the graphic and save as vector
@@ -137,12 +168,12 @@ p <- ggplot(df, aes(n, var))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("7-meanHo_impact.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("9-meanHo_impact.png", width= 6, heigh=4, units="in", dpi=300)
 
 
-#Fig 8. Impact of sample size on the accuracy of mean Ho
+#Fig 10. Impact of sample size on the accuracy of mean Ho
 #import and adjust data frame
-df <- read.table("8-Ho_diff.txt", skip=3)
+df <- read.table("10-Ho_diff.txt", skip=3)
 colnames(df) <- c("n", "locus", "diff")
 
 #plot the graphic and save as vector
@@ -153,11 +184,11 @@ p <- ggplot(df, aes(x=n, y=diff,group=n)) +
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("8-Ho_diff.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("10-Ho_diff.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 9. Impact of sample size on the accuracy of mean He
+#Fig 11. Impact of sample size on the accuracy of mean He
 #import and adjust data frame
-df <- read.table("9-He_diff.txt", skip=3)
+df <- read.table("11-He_diff.txt", skip=3)
 colnames(df) <- c("n", "locus", "diff")
 
 #plot the graphic and save as vector
@@ -168,10 +199,10 @@ p <- ggplot(df, aes(x=n, y=diff,group=n)) +
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("9-He_diff.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("11-He_diff.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 10. Impact pf sample size on mean Fst between samples and the true population
-df <- read.table("10-Fst.txt")
+#Fig 12. Impact pf sample size on mean Fst between samples and the true population
+df <- read.table("12-Fst.txt")
 colnames(df) <- c("n", "var", "sd")
 
 #plot the graphic and save as vector
@@ -184,10 +215,10 @@ p <- ggplot(df, aes(n, var))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("10-Fst.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("12-Fst.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 11. Impact pf sample size on mean Nei's genetic distance between samples and the true population
-df <- read.table("11-Nei.txt")
+#Fig 13. Impact pf sample size on mean Nei's genetic distance between samples and the true population
+df <- read.table("13-Nei.txt")
 colnames(df) <- c("n", "var", "sd")
 
 #plot the graphic and save as vector
@@ -199,10 +230,10 @@ p <- ggplot(df, aes(n, var))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("11-Nei.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("13-Nei.png", width= 6, heigh=4, units="in", dpi=300)
 
-#Fig 12. Impact pf sample size on mean Roger's genetic distance between samples and the true population
-df <- read.table("12-Roger.txt")
+#Fig 14. Impact pf sample size on mean Roger's genetic distance between samples and the true population
+df <- read.table("14-Roger.txt")
 colnames(df) <- c("n", "var", "sd")
 
 #plot the graphic and save as vector
@@ -214,7 +245,7 @@ p <- ggplot(df, aes(n, var))+
   scale_x_continuous(breaks = seq(0, tail(df$n, n=1), by = 10))+
   theme_classic()
 
-ggsave("12-Roger.png", width= 6, heigh=4, units="in", dpi=300)
+ggsave("14-Roger.png", width= 6, heigh=4, units="in", dpi=300)
 
 #Change file extension
 files <- list.files(pattern="*.txt")
