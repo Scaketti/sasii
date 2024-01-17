@@ -1,4 +1,4 @@
-sample_name: examples\snp\snp_simulated.str
+sample_name: examples/snp/snp_simulated.str
 str_type: 1
 indef_number: -9
 begin_line: 1
