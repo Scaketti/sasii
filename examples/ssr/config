@@ -1,4 +1,4 @@
-sample_name: examples\ssr\ssr_simulated.str
+sample_name: examples/ssr/ssr_simulated.str
 str_type: 1
 indef_number: -9
 begin_line: 1
