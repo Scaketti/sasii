@@ -732,8 +732,8 @@ het_diff_push <- function(hash) {
 print("SaSii - Sample_Size Impact , 'R Beta version ', (2021)");
 print(paste("Running in:", os));
 
-if(file.exists("config")){
-    config = readLines("config", n = 13);
+if(file.exists("config.txt")){
+    config = readLines("config.txt", n = 13);
 }else{
     config = NA;
 }
